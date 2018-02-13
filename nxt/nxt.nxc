@@ -1,0 +1,45 @@
+// To compile and upload...
+// USB:        nbc -d -S=usb nxt.nxc
+// Bluetooth:  nbc -d -S=BTH:M1 nxt.nxc
+
+#define BT_CONN_MASTER	0	// BlueTooth Connection to Master NXT
+#define BT_CONN_SLAVE	1	// BlueTooth Connection to Slave NXT
+#define INBOX		1	// Inbox of Master NXT
+#define OUTBOX		5	// Outbox of Master NXT
+
+task main() {
+	string msg = "";
+	int status = STAT_COMM_PENDING;
+	int counter = 0;
+
+	TextOut(0, 32, "Started...", 1);
+
+	/*
+	while(status != NO_ERR) {
+		// Check slave connection
+		while(status == STAT_COMM_PENDING) {
+			status = BluetoothStatus(BT_CONN_SLAVE);
+			NumOut(0, 0, status, 0);
+		}
+
+		NumOut(0, 0, status, 0);
+		NumOut(0, 8, counter);
+		counter++;
+	}
+	*/
+
+	while(true)
+	{
+		TextOut(0, 32, "Receiving...", 0);
+
+		// Check for new messages, delete old
+		ReceiveRemoteString(INBOX, 1, msg);
+		// TextOut(0, 0, "                ", 0);
+		TextOut(0, 0, msg, 0);
+		
+		TextOut(0, 32, "Sending...  ", 0);
+		SendRemoteString(BT_CONN_SLAVE, OUTBOX, "Hello World!");
+	}
+
+	// x = BluetoothWrite(1, data);
+}
