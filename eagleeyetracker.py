@@ -9,15 +9,13 @@ cap = cv2.VideoCapture(2)
 location = (0, 0)
 
 detector = detect.Detector()
-color = np.random.randint(0,255,(100,3))
+color = np.random.randint(0, 255, (100, 3))
 
 while True:
     ret, frame = cap.read()
     frame = cv2.flip(frame, 1)
-    # location = detect.get_coords(frame, location)
     detector.next(frame)
-    # th, phi = tracker.img_coords_to_coords(detector.location)
-    # comm.send_coords(th, phi)
+    comm.send(*detector.location)
 
     # Create a mask image for drawing purposes
     mask = np.zeros_like(detector.frame)
