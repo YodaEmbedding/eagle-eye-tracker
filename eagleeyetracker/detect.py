@@ -1,15 +1,7 @@
 import cv2
 import numpy as np
 
-def get_coords(frame, location):
-    """Gets coordinates of object from input frame
-
-    Assumptions:
-        Specify starting point (i.e. center point)
-        Track it with optical flow
-    """
-
-
+# TODO rename variables, e.g. good_new
 class Detector(object):
     def __init__(self):
         # params for ShiTomasi corner detection
@@ -33,7 +25,7 @@ class Detector(object):
     def next(self, frame):
         self.frame = frame
         self.frame_gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-        
+
         if self.old_gray is None:
             # Take first frame and find corners in it
             self.p0 = cv2.goodFeaturesToTrack(self.frame_gray, mask = None,
@@ -56,7 +48,7 @@ class Detector(object):
         else:
             self.p1 = np.squeeze(self.p1, axis=1)
             st = np.squeeze(st)
-        
+
         # Select good points
         self.good_new = self.p1[st==1]
         self.good_old = self.p0[st==1]
@@ -67,3 +59,4 @@ class Detector(object):
 
         self.location = (self.p0[0] if self.p0.shape[0] > 0
             else np.zeros((1, 1), np.float32)) # TODO type
+
