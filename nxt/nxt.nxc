@@ -2,44 +2,76 @@
 // USB:        nbc -d -S=usb nxt.nxc
 // Bluetooth:  nbc -d -S=BTH:M1 nxt.nxc
 
-#define BT_CONN_MASTER	0	// BlueTooth Connection to Master NXT
-#define BT_CONN_SLAVE	1	// BlueTooth Connection to Slave NXT
-#define INBOX		1	// Inbox of Master NXT
-#define OUTBOX		5	// Outbox of Master NXT
+const byte BT_CONN_MASTER = 0;
+const byte BT_CONN_SLAVE = 1;
+const byte INBOX = 1;
+const byte OUTBOX = 2;
+
+const byte MOTOR_PHI = OUT_A;
+const byte MOTOR_TH = OUT_B;
+
+const char MOTOR_PHI_PWR = 40;
+const char MOTOR_TH_PWR = 100;
+
+struct Angle2 {
+	float phi;
+	float th;
+};
+
+struct Vector2 {
+	float x;
+	float y;
+};
+
+// Drive to absolute position in terms of (phi, th)
+void drive_to_pos(Angle2 pos) {
+	// TODO use absolute position rather than relative degrees
+	// TODO predict point location in time t using velocity
+	// TODO RotateMotorPID
+	// TODO Use non-blocking API
+	RotateMotor(MOTOR_PHI, MOTOR_PHI_PWR, pos.phi);
+	RotateMotor(MOTOR_TH, MOTOR_TH_PWR, pos.th);
+}
+
+Angle2 coords_to_pos(Vector2 coords) {
+	// TODO quaternions, rotations, projective geometry
+	Angle2 pos;
+	pos.phi = coords.x;
+	pos.th = coords.y;
+	return pos;
+}
+
+// Parses msg of the format (x,y)
+Vector2 parse_msg(string msg) {
+	int idx = Pos(",", msg);
+
+	Vector2 coords;
+	coords.x = StrToNum(SubStr(msg, 1, idx - 1));
+	coords.y = StrToNum(SubStr(msg, idx + 1, StrLen(msg) - idx - 2));
+
+	return coords;
+}
 
 task main() {
-	string msg = "";
-	int status = STAT_COMM_PENDING;
-	int counter = 0;
+	ClearScreen();
+	TextOut(0, LCD_LINE1, "EagleEyeTracker");
+	TextOut(0, LCD_LINE3, "Please home");
 
-	TextOut(0, 32, "Started...", 1);
+	// TODO keep track of current pos
+	// Angle2 curr_pos = Angle2(0., 0.);
 
-	/*
-	while(status != NO_ERR) {
-		// Check slave connection
-		while(status == STAT_COMM_PENDING) {
-			status = BluetoothStatus(BT_CONN_SLAVE);
-			NumOut(0, 0, status, 0);
-		}
+	while (true) {
+		// TODO what is msg size limit?
+		string msg = "";
+		ReceiveRemoteString(INBOX, true, msg);
 
-		NumOut(0, 0, status, 0);
-		NumOut(0, 8, counter);
-		counter++;
+		Vector2 coords = parse_msg(msg);
+		Angle2 pos = coords_to_pos(coords);
+		drive_to_pos(pos);
+
+		ClearScreen();
+		TextOut(0, LCD_LINE1, "EagleEyeTracker");
+		TextOut(0, LCD_LINE8, msg);
 	}
-	*/
-
-	while(true)
-	{
-		TextOut(0, 32, "Receiving...", 0);
-
-		// Check for new messages, delete old
-		ReceiveRemoteString(INBOX, 1, msg);
-		// TextOut(0, 0, "                ", 0);
-		TextOut(0, 0, msg, 0);
-		
-		TextOut(0, 32, "Sending...  ", 0);
-		SendRemoteString(BT_CONN_SLAVE, OUTBOX, "Hello World!");
-	}
-
-	// x = BluetoothWrite(1, data);
 }
+
