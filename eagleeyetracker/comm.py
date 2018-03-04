@@ -30,12 +30,9 @@ class Communicator(object):
             try:
                 # TODO make this... robust
                 sleep(0.1)
-                #print('server: waiting ; msg_out = ' + self.msg_out)
                 status = self.socket.recv().decode('utf-8')
                 if status == 'ready' and self.msg_out != "":
-                    print('server: sending!')
                     self.socket.send(self.msg_out.encode('utf-8'))
-                    print('server: sent!')
                     self.msg_out = ""
             except Exception:
                 pass
@@ -46,20 +43,6 @@ class Communicator(object):
     def send_msg(self, msg):
         self.msg_out = msg
 
-        # try:
-        #     # print('msg_out = ' + msg)
-        #     # self.socket.send(msg.encode('utf-8'), flags=zmq.ZMQ_DONTWAIT)
-        #     # self.socket.send(msg.encode('utf-8'))
-
-        #     # msg = self.socket.recv(zmq.NOBLOCK).decode('utf-8')
-        #     msg = self.socket.recv().decode('utf-8')
-        #     if msg == 'ready':
-        #         self.socket.send('ah ha!'.encode('utf-8'))
-        # except Exception:
-        #     # print('send_msg exception')
-        #     pass
-
     def send_coords(self, x, y):
         """Sends coordinates to microcontroller"""
         self.send_msg(self.format_msg(x, y))
-

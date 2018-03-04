@@ -17,10 +17,9 @@ class Detector(object):
             maxLevel=2,
             criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
-        # TODO unpack/squeeze
-        self.location = np.array([-1, -1], np.float32)  # TODO uint8
-        self.good_old = np.zeros((0, 0), np.float32)
-        self.good_new = np.zeros((0, 0), np.float32)
+        self.location = np.array([-1, -1], np.float32)
+        self.good_old = np.zeros((0, 2), np.float32)
+        self.good_new = np.zeros((0, 2), np.float32)
         self.old_gray = None
 
     def next(self, frame):
@@ -67,9 +66,7 @@ class Detector(object):
         self.good_old = self.p0[st == 1]
 
         # Now update the previous frame and previous points
-        self.old_gray = self.frame_gray.copy()  #TODO rm
         self.p0 = self.good_new.reshape(-1, 1, 2)
 
         self.location = (np.squeeze(self.p0[0]) if self.p0.shape[0] > 0
-            else np.array([-1, -1], np.float32))  # TODO type
-
+            else np.array([-1, -1], np.float32))

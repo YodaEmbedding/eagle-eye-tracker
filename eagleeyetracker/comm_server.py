@@ -29,13 +29,8 @@ communicator = CommunicatorNXT()
 while True:
     msg = "no message"
     try:
-        print('client_out: ready')
         socket.send('ready'.encode('utf-8'))
-        print('client_out: waiting')
         msg = socket.recv().decode('utf-8')
     except Exception:
         pass
-    print(msg.decode('utf-8'))
-    print(type(msg.decode('utf-8')))
     communicator.send_msg(str(msg))
-

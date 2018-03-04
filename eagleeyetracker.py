@@ -17,12 +17,9 @@ while True:
     ret, frame = cap.read()
     frame = cv2.flip(frame, 1)
     detector.next(frame)
-    # print(detector.location)
-    # print(int(detector.location[0][0]))
-    # print(int(detector.location[0][1]))
-    # communicator.send_coords(detector.location[0][0], detector.location[0][1])
-    print(detector.location)
-    communicator.send_coords(int(detector.location[0]), int(detector.location[1]))
+    communicator.send_coords(
+        int(detector.location[0]),
+        int(detector.location[1]))
 
     # Create a mask image for drawing purposes
     if mask is None:
@@ -46,4 +43,3 @@ while True:
 
 cv2.destroyAllWindows()
 cap.release()
-
