@@ -17,7 +17,8 @@ class Detector(object):
             maxLevel=2,
             criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
-        self.location = np.zeros((1, 1), np.uint8)  # TODO uint8
+        # TODO unpack/squeeze
+        self.location = np.array([-1, -1], np.float32)  # TODO uint8
         self.good_old = np.zeros((0, 0), np.float32)
         self.good_new = np.zeros((0, 0), np.float32)
         self.old_gray = None
@@ -30,18 +31,30 @@ class Detector(object):
             # Take first frame and find corners in it
             self.p0 = cv2.goodFeaturesToTrack(self.frame_gray, mask = None,
                 **self.feature_params)
+            # TODO this is a strange way of doing things
+            self.p0 = (np.array([], np.float32).reshape(0, 1, 2)
+                if self.p0 is None else self.p0)
             self.old_gray = self.frame_gray
             return
 
         if self.p0.shape[0] < 4:
             new_pts = cv2.goodFeaturesToTrack(self.frame_gray, mask = None,
                 **self.feature_params)
-            self.p0 = np.concatenate((self.p0, new_pts[:4 - self.p0.shape[0]]))
+            # TODO eww...
+            new_pts = (np.array([], np.float32).reshape(0, 1, 2)
+                if new_pts is None else new_pts)
+            self.p0 = np.vstack([self.p0, new_pts[:4 - self.p0.shape[0]]])
+
+        # TODO think about what happens when no points at all to track
+        if self.p0.shape[0] == 0:
+            self.location = np.array([-1, -1], np.float32)
+            return
 
         # calculate optical flow
         self.p1, st, err = cv2.calcOpticalFlowPyrLK(self.old_gray,
             self.frame_gray, self.p0, None, **self.lk_params)
 
+        # Normalize p1 and st
         if self.p1 is None:
             self.p1 = np.zeros((0, 0), np.float32)
             st = np.zeros(0, np.float32)
@@ -50,13 +63,13 @@ class Detector(object):
             st = np.squeeze(st)
 
         # Select good points
-        self.good_new = self.p1[st==1]
-        self.good_old = self.p0[st==1]
+        self.good_new = self.p1[st == 1]
+        self.good_old = self.p0[st == 1]
 
         # Now update the previous frame and previous points
         self.old_gray = self.frame_gray.copy()  #TODO rm
-        self.p0 = self.good_new.reshape(-1,1,2)
+        self.p0 = self.good_new.reshape(-1, 1, 2)
 
-        self.location = (self.p0[0] if self.p0.shape[0] > 0
-            else np.zeros((1, 1), np.float32)) # TODO type
+        self.location = (np.squeeze(self.p0[0]) if self.p0.shape[0] > 0
+            else np.array([-1, -1], np.float32))  # TODO type
 

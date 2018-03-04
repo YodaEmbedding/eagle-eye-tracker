@@ -1,7 +1,13 @@
 #!/usr/bin/env python2
 
+import argparse
+
 import nxt.bluesock
 import zmq
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--port', help='give me a port')
+args = parser.parse_args()
 
 class CommunicatorNXT(object):
     def __init__(self):
@@ -15,12 +21,21 @@ class CommunicatorNXT(object):
         self.brick.message_write(self.remote_inbox, msg)
 
 context = zmq.Context()
-socket = context.socket(zmq.REP)
-socket.bind('tcp://127.0.0.1:5555')
+socket = context.socket(zmq.REQ)
+socket.connect('tcp://127.0.0.1:' + str(args.port))
 
 communicator = CommunicatorNXT()
 
 while True:
-    msg = socket.recv().decode('utf-8')
-    communicator.send_msg(msg)
+    msg = "no message"
+    try:
+        print('client_out: ready')
+        socket.send('ready'.encode('utf-8'))
+        print('client_out: waiting')
+        msg = socket.recv().decode('utf-8')
+    except Exception:
+        pass
+    print(msg.decode('utf-8'))
+    print(type(msg.decode('utf-8')))
+    communicator.send_msg(str(msg))
 

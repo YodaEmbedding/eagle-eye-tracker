@@ -8,7 +8,7 @@ from eagleeyetracker.detect import Detector
 
 cap = cv2.VideoCapture(2)
 
-detector = detect.Detector()
+detector = Detector()
 communicator = Communicator()
 color = np.random.randint(0, 255, (100, 3))
 mask = None
@@ -17,7 +17,12 @@ while True:
     ret, frame = cap.read()
     frame = cv2.flip(frame, 1)
     detector.next(frame)
-    communicator.send_coords(*detector.location)
+    # print(detector.location)
+    # print(int(detector.location[0][0]))
+    # print(int(detector.location[0][1]))
+    # communicator.send_coords(detector.location[0][0], detector.location[0][1])
+    print(detector.location)
+    communicator.send_coords(int(detector.location[0]), int(detector.location[1]))
 
     # Create a mask image for drawing purposes
     if mask is None:
@@ -25,6 +30,7 @@ while True:
 
     # Draw the tracks
     mask = (0.8 * mask).astype(dtype=np.uint8)
+    frame = cv2.circle(frame, tuple(detector.location), 10, (0, 0, 255), -1)
     for i, (new, old) in enumerate(zip(detector.good_new, detector.good_old)):
         a, b = new.ravel()
         c, d = old.ravel()

@@ -29,8 +29,8 @@ void drive_to_pos(Angle2 pos) {
 	// TODO predict point location in time t using velocity
 	// TODO RotateMotorPID
 	// TODO Use non-blocking API
-	RotateMotor(MOTOR_PHI, MOTOR_PHI_PWR, pos.phi);
-	RotateMotor(MOTOR_TH, MOTOR_TH_PWR, pos.th);
+	// RotateMotor(MOTOR_PHI, MOTOR_PHI_PWR, pos.phi);
+	// RotateMotor(MOTOR_TH, MOTOR_TH_PWR, pos.th);
 }
 
 Angle2 coords_to_pos(Vector2 coords) {
@@ -63,7 +63,13 @@ task main() {
 	while (true) {
 		// TODO what is msg size limit?
 		string msg = "";
-		ReceiveRemoteString(INBOX, true, msg);
+		char status = ReceiveRemoteString(INBOX, true, msg);
+
+		if (status == 64) {
+			TextOut(0, LCD_LINE7, "                ");
+			NumOut(0, LCD_LINE7, status);
+			continue;
+		}
 
 		Vector2 coords = parse_msg(msg);
 		Angle2 pos = coords_to_pos(coords);
@@ -71,7 +77,7 @@ task main() {
 
 		ClearScreen();
 		TextOut(0, LCD_LINE1, "EagleEyeTracker");
+		NumOut(0, LCD_LINE7, status);
 		TextOut(0, LCD_LINE8, msg);
 	}
 }
-
