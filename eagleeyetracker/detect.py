@@ -66,6 +66,7 @@ class Detector(object):
         self.good_old = self.p0[st == 1]
 
         # Now update the previous frame and previous points
+        self.old_gray = self.frame_gray.copy()
         self.p0 = self.good_new.reshape(-1, 1, 2)
 
         self.location = (np.squeeze(self.p0[0]) if self.p0.shape[0] > 0
