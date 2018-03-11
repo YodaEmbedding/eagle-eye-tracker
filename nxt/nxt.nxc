@@ -2,6 +2,10 @@
 // USB:        nbc -d -S=usb nxt.nxc
 // Bluetooth:  nbc -d -S=BTH:M1 nxt.nxc
 
+#define MIN(a, b) (a < b ? a : b)
+#define MAX(a, b) (a > b ? a : b)
+#define CONSTRAIN(x, a, b) MAX(a, MIN(x, b))
+
 const byte BT_CONN_MASTER = 0;
 const byte BT_CONN_SLAVE = 1;
 const byte INBOX = 1;
@@ -24,6 +28,20 @@ struct Vector2 {
 	float y;
 };
 
+string Angle2_str(Angle2 angle) {
+	// string msg = ""
+	// sprintf(msg, "(%d, %d)", angle.phi, angle.th);
+	// return msg;
+	return "(" + NumToStr(angle.phi) + ", " + NumToStr(angle.th) + ")";
+}
+
+string Vector2_str(Vector2 v) {
+	// string msg = ""
+	// sprintf(msg, "(%d, %d)", v.x, v.y);
+	// return msg;
+	return "(" + NumToStr(v.x) + ", " + NumToStr(v.y) + ")";
+}
+
 // Drive to absolute position in terms of (phi, th)
 void drive_to_pos(Angle2 pos) {
 	// TODO use absolute position rather than relative degrees
@@ -34,6 +52,15 @@ void drive_to_pos(Angle2 pos) {
 	// RotateMotor(MOTOR_TH, MOTOR_TH_PWR, pos.th);
 
 	// RotateMotor();
+
+	int pwr_phi = CONSTRAIN(pos.phi, -25, 25);
+	int pwr_th  = CONSTRAIN(pos.th,  -10, 10);
+
+	OnFwd(MOTOR_PHI, pwr_phi);
+	OnFwd(MOTOR_TH,  pwr_th);
+
+	NumOut(0,   LCD_LINE4, pwr_phi);
+	NumOut(6*4, LCD_LINE4, pwr_th);
 }
 
 Angle2 coords_to_pos(Vector2 coords) {
@@ -51,16 +78,23 @@ Vector2 parse_msg(string msg) {
 	int idx = Pos(",", msg);
 
 	Vector2 coords;
-	coords.x = StrToNum(SubStr(msg, 1, idx - 1));
-	coords.y = StrToNum(SubStr(msg, idx + 1, StrLen(msg) - idx - 2));
+
+	coords.x = 0.001 * StrToNum(SubStr(msg, 1, idx - 1));
+	coords.y = 0.001 * StrToNum(SubStr(msg, idx + 1, StrLen(msg) - idx - 2));
+
+	// TextOut(0, LCD_LINE4, SubStr(msg, 1, idx - 1));
+	// TextOut(0, LCD_LINE5, SubStr(msg, idx + 1, StrLen(msg) - idx - 2));
+
+	// NumOut(0, LCD_LINE6, coords.x);
 
 	return coords;
 }
 
+
 task main() {
 	ClearScreen();
 	TextOut(0, LCD_LINE1, "EagleEyeTracker");
-	TextOut(0, LCD_LINE3, "Please home");
+	TextOut(0, LCD_LINE2, "Please home");
 
 	// TODO keep track of current pos
 	// Angle2 curr_pos = Angle2(0., 0.);
@@ -70,8 +104,16 @@ task main() {
 		string msg = "";
 		char status = ReceiveRemoteString(INBOX, true, msg);
 
+		// msg = "(-0.1343,0.9344)";
+		// parse_msg(msg);
+
+		if (ButtonPressed(BTNCENTER, 1)) {
+			Coast(OUT_ABC);
+			continue;
+		}
+
 		if (status == STAT_MSG_EMPTY_MAILBOX) {
-			TextOut(0, LCD_LINE7, "Waiting for msg");
+			TextOut(0, LCD_LINE2, "Waiting for msg");
 			continue;
 		}
 
@@ -81,6 +123,8 @@ task main() {
 
 		ClearScreen();
 		TextOut(0, LCD_LINE1, "EagleEyeTracker");
+		// TextOut(0, LCD_LINE5, Vector2_str(coords));
+		TextOut(0, LCD_LINE5, Angle2_str(pos));
 		TextOut(0, LCD_LINE8, msg);
 	}
 }

@@ -1,0 +1,45 @@
+// To compile and upload...
+// USB:        nbc -d -S=usb nxt.nxc
+// Bluetooth:  nbc -d -S=BTH:M1 nxt.nxc
+
+task main() {
+	const int pwr = 15;
+	// TextOut(0, LCD_LINE1, "RotateMotor");
+	// RotateMotor(OUT_A, pwr, 60);
+	// RotateMotor(OUT_A, pwr, 60);
+	// RotateMotor(OUT_A, pwr, -120);
+
+
+	// OnFwd(OUT_A, -pwr);
+
+	//PosRegSetAngle()
+
+	// PID
+	// MotorRegPValue
+
+	// PosRegSetAngle(OUT_A, 100);
+	
+	PosRegSetAngle(OUT_A, 100);
+	OnFwdRegPID(OUT_A, -pwr, OUT_REGMODE_POS, 100, 0, 0);
+
+	while(true) {
+		ClearScreen();
+		NumOut(0, LCD_LINE1, MotorRotationCount(OUT_A), 0);
+		NumOut(0, LCD_LINE2, MotorRotationCount(OUT_A), 0);
+		NumOut(0, LCD_LINE3, MotorRotationCount(OUT_A), 0);
+		NumOut(0, LCD_LINE4, MotorRotationCount(OUT_A), 0);
+		NumOut(0, LCD_LINE5, MotorActualSpeed(OUT_A), 0);
+		NumOut(0, LCD_LINE6, MotorTurnRatio(OUT_A), 0);
+		NumOut(0, LCD_LINE7, MotorRotationCount(OUT_A), 0);
+		NumOut(0, LCD_LINE8, MotorTachoCount(OUT_A), 0);
+		Wait(100);
+	}
+
+	// RotateMotor	Blocking
+	// RotateMotor(port, pwr, degrees)
+
+	// OnFwd	Non-blocking
+	// OnFwd(port, pwr)
+
+
+}
