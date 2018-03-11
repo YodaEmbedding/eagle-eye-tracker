@@ -38,7 +38,7 @@ class Communicator(object):
                 pass
 
     def format_msg(self, x, y):
-        return '({},{})'.format(x, y)
+        return '({0},{1})'.format(int(1000 * x), int(1000 * y))
 
     def send_msg(self, msg):
         self.msg_out = msg
