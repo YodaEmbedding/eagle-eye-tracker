@@ -16,10 +16,13 @@ mask = None
 while True:
     ret, frame = cap.read()
     frame = cv2.flip(frame, 1)
+
     detector.next(frame)
-    communicator.send_coords(
-        int(detector.location[0]),
-        int(detector.location[1]))
+    scale = 1. / np.max(frame.shape)
+    offset = 0.5 * frame.shape
+    coords = tuple(scale * (detector.location - offset))
+
+    communicator.send_coords(*coords)
 
     # Create a mask image for drawing purposes
     if mask is None:
