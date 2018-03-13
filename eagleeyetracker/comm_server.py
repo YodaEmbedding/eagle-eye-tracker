@@ -2,7 +2,16 @@
 
 import argparse
 
-import nxt.bluesock
+ENABLE_BT  = False
+ENABLE_USB = True
+
+if ENABLE_BT:
+    import nxt.bluesock
+
+if ENABLE_USB:
+    import nxt.usbsock
+    import nxt.locator
+
 import zmq
 
 parser = argparse.ArgumentParser()
@@ -15,7 +24,15 @@ class CommunicatorNXT(object):
         self.local_inbox = 2
         self.mac_address = '00:16:53:01:B8:C3'
 
-        self.brick = nxt.bluesock.BlueSock(self.mac_address).connect()
+        if ENABLE_BT:
+            self.brick = nxt.bluesock.BlueSock(self.mac_address).connect()
+
+        if ENABLE_USB:
+            self.brick = nxt.locator.find_one_brick()
+
+    def recv_msg(self):
+        msg = self.brick.message_read(self.local_inbox, 0, remove=True)[1][:-1]
+        return msg
 
     def send_msg(self, msg):
         self.brick.message_write(self.remote_inbox, msg)
