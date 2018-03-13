@@ -8,15 +8,19 @@
 
 const byte BT_CONN_MASTER = 0;
 const byte BT_CONN_SLAVE = 1;
-const byte INBOX = 1;
+const byte INBOX  = 1;
 const byte OUTBOX = 2;
 
 const byte MOTOR_PHI = OUT_A;
-const byte MOTOR_TH = OUT_B;
+const byte MOTOR_TH  = OUT_B;
 
 const char MOTOR_PHI_PWR = 40;
-const char MOTOR_TH_PWR = 100;
+const char MOTOR_TH_PWR  = 100;
 const float XY_SCALE = 1000.0;
+
+// TODO
+// const float MOTOR_PHI_GEAR_RATIO = ;
+// const float MOTOR_TH_GEAR_RATIO  = ;
 
 struct Angle2 {
 	float phi;
@@ -103,9 +107,6 @@ task main() {
 		// TODO what is msg size limit?
 		string msg = "";
 		char status = ReceiveRemoteString(INBOX, true, msg);
-
-		// msg = "(-0.1343,0.9344)";
-		// parse_msg(msg);
 
 		if (ButtonPressed(BTNCENTER, 1)) {
 			Coast(OUT_ABC);

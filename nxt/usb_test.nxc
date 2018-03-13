@@ -1,0 +1,41 @@
+// To compile and upload...
+// USB:        nbc -d -S=usb    usb_test.nxc
+// Bluetooth:  nbc -d -S=BTH:M1 usb_test.nxc
+
+const byte INBOX  = 1;
+const byte OUTBOX = 2;
+
+task main() {
+	byte data[5] = {' ', 'A', 'B', 'C', '\n'};
+
+	// while (true) {
+		// Wait(50);
+		// SetUSBOutputBuffer(0, 5, data);
+	// }
+
+	while (true) {
+		string msg = "";
+
+		if (ReceiveMessage(INBOX, true, msg) != NO_ERR) {
+			continue;
+		}
+
+		if (SubStr(msg, 0, StrLen("ping ")) == "ping ") {
+			SendMessage(OUTBOX, msg);
+			continue;
+		}
+
+		if (ButtonPressed(BTNCENTER, 1)) {
+			continue;
+		}
+
+		char status = 0;
+		if (status == STAT_MSG_EMPTY_MAILBOX) {
+			TextOut(0, LCD_LINE2, "Waiting for msg");
+			continue;
+		}
+
+		ClearScreen();
+		TextOut(0, LCD_LINE8, msg);
+	}
+}
