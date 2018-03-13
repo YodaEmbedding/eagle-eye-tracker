@@ -6,3 +6,5 @@ __pycache__/
 *.bak
 *.sym
 
+# Other
+*.swp
