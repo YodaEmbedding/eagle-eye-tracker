@@ -16,7 +16,7 @@ class Communicator(object):
         self.socket.bind(addr)
 
         def worker():
-            subprocess.call('py -2 ./eagleeyetracker/comm_server.py --port ' + str(port), shell=True)
+            subprocess.call('py -2 ./eagleeyetracker/comm_client.py --port ' + str(port), shell=True)
 
         thread = threading.Thread(target=worker, daemon=True)
         thread.start()
