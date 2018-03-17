@@ -1,0 +1,26 @@
+
+#define MIN(a, b) (a < b ? a : b)
+#define MAX(a, b) (a > b ? a : b)
+#define CONSTRAIN(x, a, b) MAX(a, MIN(x, b))
+
+struct Angle2 {
+	float phi;
+	float th;
+};
+
+struct Vector2 {
+	float x;
+	float y;
+};
+
+string Angle2_str(Angle2 angle) {
+	return
+		"("  + SubStr(NumToStr(angle.phi), 0, 4) +
+		", " + SubStr(NumToStr(angle.th),  0, 4) + ")";
+}
+
+string Vector2_str(Vector2 v) {
+	return
+		"("  + SubStr(NumToStr(v.x), 0, 4) +
+		", " + SubStr(NumToStr(v.y), 0, 4) + ")";
+}

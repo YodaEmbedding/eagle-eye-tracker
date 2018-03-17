@@ -2,82 +2,63 @@
 // USB:        nbc -d -S=usb nxt.nxc
 // Bluetooth:  nbc -d -S=BTH:M1 nxt.nxc
 
-#define MIN(a, b) (a < b ? a : b)
-#define MAX(a, b) (a > b ? a : b)
-#define CONSTRAIN(x, a, b) MAX(a, MIN(x, b))
+#include "lib.nxc"
 
-const byte BT_CONN_MASTER = 0;
-const byte BT_CONN_SLAVE = 1;
 const byte INBOX  = 1;
 const byte OUTBOX = 2;
 
 const byte MOTOR_PHI = OUT_A;
 const byte MOTOR_TH  = OUT_B;
 
-const char MOTOR_PHI_PWR = 40;
+const char MOTOR_PHI_POLARITY = -1;
+const char MOTOR_TH_POLARITY  = 1;
+const char MOTOR_PHI_PWR = 100;
 const char MOTOR_TH_PWR  = 100;
-const float XY_SCALE = 1000.0;
+// const char MOTOR_PWR_PER_RADIAN = 100;
+const float GRAVITY_FACTOR = 5.0;
 
-// TODO
+const float CAMERA_PHI = PI / 6;
+const float XY_SCALE = CAMERA_PHI / 2;
+
+// Globals
+int pwr_phi = 0;
+int pwr_th  = 0;
+Angle2 curr_pos;
+
+// TODO Needed for accurate setpoint prediction using encoder data!
 // const float MOTOR_PHI_GEAR_RATIO = ;
 // const float MOTOR_TH_GEAR_RATIO  = ;
-
-struct Angle2 {
-	float phi;
-	float th;
-};
-
-struct Vector2 {
-	float x;
-	float y;
-};
-
-string Angle2_str(Angle2 angle) {
-	// string msg = ""
-	// sprintf(msg, "(%d, %d)", angle.phi, angle.th);
-	// return msg;
-	return "(" + NumToStr(angle.phi) + ", " + NumToStr(angle.th) + ")";
-}
-
-string Vector2_str(Vector2 v) {
-	// string msg = ""
-	// sprintf(msg, "(%d, %d)", v.x, v.y);
-	// return msg;
-	return "(" + NumToStr(v.x) + ", " + NumToStr(v.y) + ")";
-}
 
 // Drive to absolute position in terms of (phi, th)
 void drive_to_pos(Angle2 pos) {
 	// TODO use absolute position rather than relative degrees
 	// TODO predict point location in time t using velocity
-	// TODO RotateMotorPID
-	// TODO Use non-blocking API
-	// RotateMotor(MOTOR_PHI, MOTOR_PHI_PWR, pos.phi);
-	// RotateMotor(MOTOR_TH, MOTOR_TH_PWR, pos.th);
+	// TODO PID
+	// TODO resistance/drag modelling
 
-	// RotateMotor();
+	int pwr_gravity = GRAVITY_FACTOR * Sin(curr_pos.th);
 
-	int pwr_phi = CONSTRAIN(pos.phi, -25, 25);
-	int pwr_th  = CONSTRAIN(pos.th,  -10, 10);
+	pwr_phi = pos.phi * MOTOR_PHI_PWR;
+	pwr_th  = pos.th  * MOTOR_TH_PWR  + pwr_gravity;
 
-	OnFwd(MOTOR_PHI, pwr_phi);
-	OnFwd(MOTOR_TH,  pwr_th);
+	pwr_phi = CONSTRAIN(pwr_phi, -50, 50);
+	pwr_th  = CONSTRAIN(pwr_th,  -30, 30);
 
-	NumOut(0,   LCD_LINE4, pwr_phi);
-	NumOut(6*4, LCD_LINE4, pwr_th);
+	OnFwd(MOTOR_PHI, MOTOR_PHI_POLARITY * pwr_phi);
+	OnFwd(MOTOR_TH,  MOTOR_TH_POLARITY  * pwr_th);
 }
 
+// Convert input motor coordinates to position
+// TODO Should maybe update setpoint or something...?
 Angle2 coords_to_pos(Vector2 coords) {
-	// TODO quaternions, rotations, projective geometry
+	// TODO quaternions, rotations, projective geometry?
 	Angle2 pos;
-	// pos.phi = coords.x;
-	// pos.th  = coords.y;
-	pos.phi = -XY_SCALE * coords.x; // TODO / sin(curr.th);
+	pos.phi = -XY_SCALE * coords.x; // TODO / sin(curr_pos.th);
 	pos.th  = -XY_SCALE * coords.y;
 	return pos;
 }
 
-// Parses msg of the format (x,y)
+// Parses msg of format "(x,y)"
 Vector2 parse_msg(string msg) {
 	int idx = Pos(",", msg);
 
@@ -86,46 +67,56 @@ Vector2 parse_msg(string msg) {
 	coords.x = 0.001 * StrToNum(SubStr(msg, 1, idx - 1));
 	coords.y = 0.001 * StrToNum(SubStr(msg, idx + 1, StrLen(msg) - idx - 2));
 
-	// TextOut(0, LCD_LINE4, SubStr(msg, 1, idx - 1));
-	// TextOut(0, LCD_LINE5, SubStr(msg, idx + 1, StrLen(msg) - idx - 2));
-
-	// NumOut(0, LCD_LINE6, coords.x);
-
 	return coords;
 }
-
 
 task main() {
 	ClearScreen();
 	TextOut(0, LCD_LINE1, "EagleEyeTracker");
 	TextOut(0, LCD_LINE2, "Please home");
+		
+	Angle2 curr_pos;
+	Angle2 pos;
+	Vector2 coords;
 
-	// TODO keep track of current pos
-	// Angle2 curr_pos = Angle2(0., 0.);
+	curr_pos.phi = 0.0;
+	curr_pos.th  = PI / 2;
+
+	unsigned long refresh_display_tick = CurrentTick();
 
 	while (true) {
-		// TODO what is msg size limit?
 		string msg = "";
 		char status = ReceiveRemoteString(INBOX, true, msg);
 
-		if (ButtonPressed(BTNCENTER, 1)) {
+		if (status != STAT_MSG_EMPTY_MAILBOX) {
+			// TODO keep track of curr_pos
+			coords = parse_msg(msg);
+			pos = coords_to_pos(coords);
+		}
+
+		if (refresh_display_tick + 100 <= CurrentTick()) {
+			refresh_display_tick = CurrentTick();
+
+			string status_str = "";
+			if (status == STAT_MSG_EMPTY_MAILBOX)
+				status_str = "Waiting for msg";
+
+			ClearScreen();
+			TextOut(0,   LCD_LINE1, "EagleEyeTracker");
+			TextOut(0,   LCD_LINE2, status_str);
+			NumOut( 0,   LCD_LINE5, pwr_phi);
+			NumOut( 6*4, LCD_LINE5, pwr_th);
+			TextOut(0,   LCD_LINE6, Angle2_str(pos));
+			TextOut(0,   LCD_LINE7, Vector2_str(coords));
+			TextOut(0,   LCD_LINE8, msg);
+		}
+
+		// TODO use controller to home/pause driving/etc
+		if (ButtonPressed(BTNCENTER)) {
 			Coast(OUT_ABC);
 			continue;
 		}
 
-		if (status == STAT_MSG_EMPTY_MAILBOX) {
-			TextOut(0, LCD_LINE2, "Waiting for msg");
-			continue;
-		}
-
-		Vector2 coords = parse_msg(msg);
-		Angle2 pos = coords_to_pos(coords);
 		drive_to_pos(pos);
-
-		ClearScreen();
-		TextOut(0, LCD_LINE1, "EagleEyeTracker");
-		// TextOut(0, LCD_LINE5, Vector2_str(coords));
-		TextOut(0, LCD_LINE5, Angle2_str(pos));
-		TextOut(0, LCD_LINE8, msg);
 	}
 }

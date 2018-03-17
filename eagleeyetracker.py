@@ -17,7 +17,7 @@ mask = None
 
 while True:
     ret, frame = cap.read()
-    frame = cv2.flip(frame, 1)
+    # frame = cv2.flip(frame, 1)
 
     detector.next(frame)
     raw_coords = np.flip(frame.shape[0:2], axis=0)
