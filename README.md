@@ -16,10 +16,6 @@ Now simply:
 
 ## TODO
 
-Testing:
-
- - Test updated code to make sure USB communication is working
-
 Tracking:
 
  - Keep track of current position (using motor encoders)

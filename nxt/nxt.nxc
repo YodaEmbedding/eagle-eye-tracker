@@ -21,19 +21,32 @@ const float CAMERA_PHI = PI / 6;
 const float XY_SCALE = CAMERA_PHI / 2;
 
 // Globals
+Angle2 curr_pos;
 int pwr_phi = 0;
 int pwr_th  = 0;
-Angle2 curr_pos;
+long encoder_home_phi = 0;
+long encoder_home_th  = 0;
 
 // TODO Needed for accurate setpoint prediction using encoder data!
-// const float MOTOR_PHI_GEAR_RATIO = ;
-// const float MOTOR_TH_GEAR_RATIO  = ;
+const float MOTOR_PHI_GEAR_RATIO = 1;
+const float MOTOR_TH_GEAR_RATIO  = 1;
+
+// Convert input motor coordinates to position
+Angle2 coords_to_pos(Vector2 coords) {
+	// TODO Should maybe update setpoint or something...?
+	// TODO quaternions, rotations, projective geometry?
+	Angle2 pos;
+	pos.phi = -XY_SCALE * coords.x / sin(curr_pos.th);
+	pos.th  = -XY_SCALE * coords.y;
+	return pos;
+}
 
 // Drive to absolute position in terms of (phi, th)
 void drive_to_pos(Angle2 pos) {
 	// TODO use absolute position rather than relative degrees
 	// TODO predict point location in time t using velocity
 	// TODO PID
+	// TODO smarter pathing
 	// TODO resistance/drag modelling
 
 	int pwr_gravity = GRAVITY_FACTOR * Sin(curr_pos.th);
@@ -48,25 +61,25 @@ void drive_to_pos(Angle2 pos) {
 	OnFwd(MOTOR_TH,  MOTOR_TH_POLARITY  * pwr_th);
 }
 
-// Convert input motor coordinates to position
-// TODO Should maybe update setpoint or something...?
-Angle2 coords_to_pos(Vector2 coords) {
-	// TODO quaternions, rotations, projective geometry?
-	Angle2 pos;
-	pos.phi = -XY_SCALE * coords.x; // TODO / sin(curr_pos.th);
-	pos.th  = -XY_SCALE * coords.y;
-	return pos;
+void refresh_curr_pos() {
+	long encoder_phi = MotorRotationCount(MOTOR_PHI);
+	long encoder_th  = MotorRotationCount(MOTOR_TH);
+
+	curr_pos.phi = MOTOR_PHI_POLARITY * MOTOR_PHI_GEAR_RATIO * (encoder_phi - encoder_home_phi);
+	curr_pos.th  = MOTOR_TH_POLARITY  * MOTOR_TH_GEAR_RATIO  * (encoder_th  - encoder_home_th);
+}
+
+void set_home() {
+	encoder_home_phi = MotorRotationCount(MOTOR_PHI);
+	encoder_home_th  = MotorRotationCount(MOTOR_TH);
 }
 
 // Parses msg of format "(x,y)"
 Vector2 parse_msg(string msg) {
 	int idx = Pos(",", msg);
-
 	Vector2 coords;
-
 	coords.x = 0.001 * StrToNum(SubStr(msg, 1, idx - 1));
 	coords.y = 0.001 * StrToNum(SubStr(msg, idx + 1, StrLen(msg) - idx - 2));
-
 	return coords;
 }
 
@@ -74,14 +87,11 @@ task main() {
 	ClearScreen();
 	TextOut(0, LCD_LINE1, "EagleEyeTracker");
 	TextOut(0, LCD_LINE2, "Please home");
-		
-	Angle2 curr_pos;
+
+	set_home();
+
 	Angle2 pos;
 	Vector2 coords;
-
-	curr_pos.phi = 0.0;
-	curr_pos.th  = PI / 2;
-
 	unsigned long refresh_display_tick = CurrentTick();
 
 	while (true) {
@@ -89,10 +99,11 @@ task main() {
 		char status = ReceiveRemoteString(INBOX, true, msg);
 
 		if (status != STAT_MSG_EMPTY_MAILBOX) {
-			// TODO keep track of curr_pos
 			coords = parse_msg(msg);
 			pos = coords_to_pos(coords);
 		}
+
+		refresh_curr_pos();
 
 		if (refresh_display_tick + 100 <= CurrentTick()) {
 			refresh_display_tick = CurrentTick();
@@ -120,3 +131,4 @@ task main() {
 		drive_to_pos(pos);
 	}
 }
+
