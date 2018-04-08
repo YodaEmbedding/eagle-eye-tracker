@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 
 # TODO rename class... this isn't really a detector!
-# TODO rename old_gray? gray_prev?
 class Detector(object):
     def __init__(self):
         self.feature_params = dict(
@@ -18,13 +17,23 @@ class Detector(object):
 
         self.features      = np.zeros((0, 2), np.float32)
         self.features_prev = np.zeros((0, 2), np.float32)
-        self.old_gray = None
-        self.pixel_location = np.array([-1, -1], np.float32)
+        self.frame_gray_prev = None
+        self.pixel_location = None
 
     def __setattr__(self, name, value):
         if name == 'pixel_location':
             self.location = self._calc_location(value)
-            # TODO default value
+            if value is None:
+                value = np.array([-1, -1], np.float32)
+
+        cv_arrs = {
+            'features_new': (-1, 2),
+            'features': (-1, 2),
+            'st': -1
+        }
+
+        if name in cv_arrs:
+            value = _normalize_arr(value, cv_arrs[name])
 
         super().__setattr__(name, value)
 
@@ -34,20 +43,18 @@ class Detector(object):
 
         self._track_more_points()
 
-        if self.old_gray is None:
-            self.old_gray = self.frame_gray
+        if self.frame_gray_prev is None:
+            self.frame_gray_prev = self.frame_gray
             return
 
         if self.features.shape[0] == 0:
-            self.pixel_location = np.array([-1, -1], np.float32)
+            self.pixel_location = None
             return
 
         self.features_prev = self.features
-        self.features, self.st, err = cv2.calcOpticalFlowPyrLK(self.old_gray,
-            self.frame_gray, self.features_prev, None, **self.lk_params)
-
-        self.features = _normalize_arr(self.features, (-1, 2))
-        self.st       = _normalize_arr(self.st, -1)
+        self.features, self.st, err = cv2.calcOpticalFlowPyrLK(
+            self.frame_gray_prev, self.frame_gray,
+            self.features_prev, None, **self.lk_params)
 
         # Filter bad features
         good_features = self.st == 1
@@ -57,17 +64,17 @@ class Detector(object):
         self._track_more_points()
 
         # Update previous frame and points
-        self.old_gray = self.frame_gray.copy()
+        self.frame_gray_prev = self.frame_gray.copy()
 
         # Use first point
         self.pixel_location = (self.features[0]
             if self.features.shape[0] > 0
-            else np.array([-1, -1], np.float32))
+            else None)
 
     def _calc_location(self, pixel_location):
         """Offset and normalize location (x. y) within range [-1, 1]"""
 
-        if np.any(pixel_location < 0):
+        if pixel_location is None:
             return (0, 0)
 
         size = np.flip(self.frame.shape[0:2], axis=0)
@@ -82,12 +89,12 @@ class Detector(object):
         if self.features.shape[0] >= self.feature_params['maxCorners']:
             return
 
-        new_pts = cv2.goodFeaturesToTrack(self.frame_gray, mask = None,
-            **self.feature_params)
-        new_pts = _normalize_arr(new_pts, (-1, 2))
-        new_pts = new_pts[:self.feature_params['maxCorners'] - self.features.shape[0]]
+        self.features_new = cv2.goodFeaturesToTrack(self.frame_gray,
+            mask = None, **self.feature_params)
+        size_new = self.feature_params['maxCorners'] - self.features.shape[0]
+        self.features_new = self.features_new[:size_new]
 
-        self.features = np.vstack([self.features, new_pts])
+        self.features = np.vstack([self.features, self.features_new])
 
 def _normalize_arr(arr, shape):
     """Normalize given array
