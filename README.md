@@ -4,11 +4,33 @@ SFU Capstone Project (ENSC 405/440).
 
 Group members: Mateen Ulhaq, Bud Yarrow, Arman Athwal, Naim Tejani, Victor Yun, Martin Leung
 
+## Installation
+
+
+Install the following:
+
+ - [Anaconda 3](https://www.anaconda.com/download/) (with opencv, numpy, pyzmq)
+ - [Python 2](https://www.python.org/downloads/) (with pyusb, pyzmq, nxt-python)
+ - [BricxCC](http://bricxcc.sourceforge.net/test_releases/bricxcc_setup_33810_20130220.exe)
+ - [BricxCC test release](http://bricxcc.sourceforge.net/test_releases/test_release20131007.zip) (overwrite your existing BricxCC installation with this)
+ - [libusb-win32](https://sourceforge.net/projects/libusb-win32/files/libusb-win32-releases/1.2.6.0/libusb-win32-devel-filter-1.2.6.0.exe) (install for port used by NXT USB)
+ - [NXT Fantom Drivers](https://www.lego.com/r/www/r/mindstorms/-/media/franchises/mindstorms%202014/downloads/firmware%20and%20software/nxt%20software/nxt%20fantom%20drivers%20v120.zip?l.r2=-964392510)
+
+Set your `PATH` environment variable to include the following paths:
+
+    Anaconda 3 installation directory
+    Python 2   installation directory
+    BricxCC    installation directory
+
+To be sure that no other paths override these, it is recommended that you put these paths at the very beginning of your `PATH`.
+
+Finally, be sure to upload the [NBC/NXC Enhanced Firmware](http://bricxcc.sourceforge.net/test_releases/lms_arm_nbcnxc_132_20130303_2051.rfw) to the NXT brick.
+
 ## Usage
 
 Compile, download, and run the program on the NXT:
 
-    nbc -d -r -S=usb nxt.nxc
+    nbc -EF -S=usb -d -r nxt.nxc
 
 Now simply:
 
