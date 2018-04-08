@@ -58,14 +58,11 @@ void drive_pwr(int pwr_phi, int pwr_th) {
 
 // Drive to absolute position in terms of (phi, th)
 void drive_to_setpoint(Angle2 setpoint) {
-	// TODO use absolute position rather than relative degrees
-	// TODO predict point location in time t using velocity
 	// TODO PID
-	// TODO smarter pathing
+	// TODO predict point location in time t using velocity (store velocity in which coordinate sys?)
+	// TODO smarter pathing (geodesics kappa... also use current velocity and constraints on geometry)
 	// TODO resistance/drag modelling
 
-	// TODO longterm todos... FEATURE?
-	// TODO subtract this?
 	Angle2 dpos = Angle2_sub(setpoint, curr_pos);
 
 	int pwr_gravity = -GRAVITY_FACTOR * sin(curr_pos.th);
@@ -148,7 +145,6 @@ task main() {
 	ClearScreen();
 	TextOut(0, LCD_LINE1, "EagleEyeTracker");
 	TextOut(0, LCD_LINE2, "Please home");
-	//NumOut( 0, LCD_LINE3, sin(PI/2));
 
 	InputState input_state;
 
@@ -175,8 +171,6 @@ task main() {
 	while (true) {
 		string msg = "";
 		char status = ReceiveRemoteString(INBOX, true, msg);
-		//msg = "(800,0)";
-		//status = 0;
 
 		if (status != STAT_MSG_EMPTY_MAILBOX) {
 			coords = parse_msg(msg);
