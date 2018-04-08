@@ -4,6 +4,7 @@ import numpy as np
 # TODO rename class... this isn't really a detector!
 class Detector(object):
     def __init__(self):
+        # TODO tune params
         self.feature_params = dict(
             maxCorners=4,
             qualityLevel=0.3,
@@ -11,7 +12,7 @@ class Detector(object):
             blockSize=7)
 
         self.lk_params = dict(
-            winSize=(15,15),
+            winSize=(15, 15),
             maxLevel=2,
             criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
@@ -56,10 +57,20 @@ class Detector(object):
             self.frame_gray_prev, self.frame_gray,
             self.features_prev, None, **self.lk_params)
 
+        # Determine if outside soft image boundaries
+        size = np.array(self.frame_gray.shape[::-1])
+        outside_boundary = np.any(
+            (self.features > 0.95 * size) |
+            (self.features < 0.05 * size), axis=1)
+
         # Filter bad features
-        good_features = self.st == 1
-        self.features = self.features[good_features]
-        self.features_prev = self.features_prev[good_features]
+        # good_features = (self.st == 1) | !outside_boundary
+        # self.features = self.features[good_features]
+        # self.features_prev = self.features_prev[good_features]
+
+        # Reset bad features to previous location
+        bad_features = (self.st != 1) | outside_boundary
+        self.features[bad_features] = self.features_prev[bad_features]
 
         self._track_more_points()
 
