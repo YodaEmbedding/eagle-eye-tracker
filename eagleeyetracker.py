@@ -7,25 +7,31 @@ from eagleeyetracker.comm import Communicator
 from eagleeyetracker.detect import Detector
 
 ENABLE_COMM = True
+ENABLE_FLIP = True
 
 cap = cv2.VideoCapture(2)
 
 detector = Detector()
-if ENABLE_COMM: communicator = Communicator()
+if ENABLE_COMM:
+    communicator = Communicator()
 color = np.random.randint(0, 255, (100, 3))
 mask = None
 
 while True:
     ret, frame = cap.read()
-    # frame = cv2.flip(frame, 1)
+
+    if ENABLE_FLIP:
+        frame = cv2.flip(frame, 1)
 
     detector.next(frame)
     raw_coords = np.flip(frame.shape[0:2], axis=0)
     scale = 2. / np.max(raw_coords)
     offset = 0.5 * np.array(raw_coords)
-    coords = tuple(scale * (detector.location - offset))
+    coords = scale * (detector.location - offset)
+    coords[1] = -coords[1]
 
-    if ENABLE_COMM: communicator.send_coords(*coords)
+    if ENABLE_COMM:
+        communicator.send_coords(*tuple(coords))
 
     # Create a mask image for drawing purposes
     if mask is None:

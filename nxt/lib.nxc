@@ -3,6 +3,22 @@
 #define MAX(a, b) (a > b ? a : b)
 #define CONSTRAIN(x, a, b) MAX(a, MIN(x, b))
 
+float sin(float x) {
+	float x_deg = x * 180 / PI;
+	return 0.01 * Sin(x_deg);
+}
+
+float cos(float x) {
+	float x_deg = x * 180 / PI;
+	return 0.01 * Cos(x_deg);
+}
+
+float tan(float x) {
+	return sin(x) / cos(x);
+	//float x_deg = x * 180 / PI;
+	//return 0.01 * Tan(x_deg);
+}
+
 struct Angle2 {
 	float phi;
 	float th;
@@ -19,8 +35,37 @@ string Angle2_str(Angle2 angle) {
 		", " + SubStr(NumToStr(angle.th),  0, 4) + ")";
 }
 
+Angle2 Angle2_add(Angle2 op1, Angle2 op2) {
+	Angle2 result;
+	result.phi = op1.phi + op2.phi;
+	result.th  = op1.th  + op2.th;
+	return result;
+}
+
+Angle2 Angle2_sub(Angle2 op1, Angle2 op2) {
+	Angle2 result;
+	result.phi = op1.phi - op2.phi;
+	result.th  = op1.th  - op2.th;
+	return result;
+}
+
 string Vector2_str(Vector2 v) {
 	return
 		"("  + SubStr(NumToStr(v.x), 0, 4) +
 		", " + SubStr(NumToStr(v.y), 0, 4) + ")";
 }
+
+Vector2 Vector2_add(Vector2 op1, Vector2 op2) {
+	Vector2 result;
+	result.x = op1.x + op2.x;
+	result.y = op1.y + op2.y;
+	return result;
+}
+
+Vector2 Vector2_sub(Vector2 op1, Vector2 op2) {
+	Vector2 result;
+	result.x = op1.x - op2.x;
+	result.y = op1.y - op2.y;
+	return result;
+}
+

@@ -3,75 +3,134 @@
 // Bluetooth:  nbc -d -S=BTH:M1 nxt.nxc
 
 #include "lib.nxc"
+#include "PSP-Nx-lib-edit.nxc"
 
 const byte INBOX  = 1;
 const byte OUTBOX = 2;
+const byte ADDR = 0x02;
 
+const byte PSP_PORT = IN_1;
 const byte MOTOR_PHI = OUT_A;
 const byte MOTOR_TH  = OUT_B;
 
-const char MOTOR_PHI_POLARITY = -1;
-const char MOTOR_TH_POLARITY  = 1;
+const char MOTOR_PHI_POLARITY = 1;
+const char MOTOR_TH_POLARITY  = -1;
 const char MOTOR_PHI_PWR = 100;
 const char MOTOR_TH_PWR  = 100;
-// const char MOTOR_PWR_PER_RADIAN = 100;
-const float GRAVITY_FACTOR = 5.0;
+const float GRAVITY_FACTOR = 2.0;
 
 const float CAMERA_PHI = PI / 6;
 const float XY_SCALE = CAMERA_PHI / 2;
 
-// Globals
+const float HOME_PHI = 0.0;
+const float HOME_TH  = PI / 2;
+
+const float MOTOR_PHI_GEAR_RATIO = 8.0 / 40.0;
+const float MOTOR_TH_GEAR_RATIO  = 8.0 / 24.0;
+
 Angle2 curr_pos;
 int pwr_phi = 0;
 int pwr_th  = 0;
 long encoder_home_phi = 0;
 long encoder_home_th  = 0;
 
-// TODO Needed for accurate setpoint prediction using encoder data!
-const float MOTOR_PHI_GEAR_RATIO = 1;
-const float MOTOR_TH_GEAR_RATIO  = 1;
+struct InputState {
+	bool critical_stop;
+	bool pwr_override;
+	bool set_home;
+	char phi;
+	char th;
+};
 
-// Convert input motor coordinates to position
-Angle2 coords_to_pos(Vector2 coords) {
-	// TODO Should maybe update setpoint or something...?
+// Convert input camera coordinates to delta position
+Angle2 coords_to_dpos(Vector2 coords) {
 	// TODO quaternions, rotations, projective geometry?
-	Angle2 pos;
-	pos.phi = -XY_SCALE * coords.x / sin(curr_pos.th);
-	pos.th  = -XY_SCALE * coords.y;
-	return pos;
+	Angle2 dpos;
+	dpos.phi = -XY_SCALE * coords.x * sin(curr_pos.th);
+	dpos.th  = -XY_SCALE * coords.y;
+	return dpos;
+}
+
+void drive_pwr(int pwr_phi, int pwr_th) {
+	OnFwd(MOTOR_PHI, MOTOR_PHI_POLARITY * pwr_phi);
+	OnFwd(MOTOR_TH,  MOTOR_TH_POLARITY  * pwr_th);
 }
 
 // Drive to absolute position in terms of (phi, th)
-void drive_to_pos(Angle2 pos) {
+void drive_to_setpoint(Angle2 setpoint) {
 	// TODO use absolute position rather than relative degrees
 	// TODO predict point location in time t using velocity
 	// TODO PID
 	// TODO smarter pathing
 	// TODO resistance/drag modelling
 
-	int pwr_gravity = GRAVITY_FACTOR * Sin(curr_pos.th);
+	// TODO longterm todos... FEATURE?
+	// TODO subtract this?
+	Angle2 dpos = Angle2_sub(setpoint, curr_pos);
 
-	pwr_phi = pos.phi * MOTOR_PHI_PWR;
-	pwr_th  = pos.th  * MOTOR_TH_PWR  + pwr_gravity;
+	int pwr_gravity = -GRAVITY_FACTOR * sin(curr_pos.th);
+
+	pwr_phi = dpos.phi * MOTOR_PHI_PWR;
+	pwr_th  = dpos.th  * MOTOR_TH_PWR  + pwr_gravity;
 
 	pwr_phi = CONSTRAIN(pwr_phi, -50, 50);
 	pwr_th  = CONSTRAIN(pwr_th,  -30, 30);
 
-	OnFwd(MOTOR_PHI, MOTOR_PHI_POLARITY * pwr_phi);
-	OnFwd(MOTOR_TH,  MOTOR_TH_POLARITY  * pwr_th);
+	drive_pwr(pwr_phi, pwr_th);
 }
 
 void refresh_curr_pos() {
 	long encoder_phi = MotorRotationCount(MOTOR_PHI);
 	long encoder_th  = MotorRotationCount(MOTOR_TH);
 
-	curr_pos.phi = MOTOR_PHI_POLARITY * MOTOR_PHI_GEAR_RATIO * (encoder_phi - encoder_home_phi);
-	curr_pos.th  = MOTOR_TH_POLARITY  * MOTOR_TH_GEAR_RATIO  * (encoder_th  - encoder_home_th);
+	curr_pos.phi = HOME_PHI +  (
+		MOTOR_PHI_POLARITY * MOTOR_PHI_GEAR_RATIO * PI / 180 *
+		(encoder_phi - encoder_home_phi));
+	curr_pos.th  = HOME_TH  + (
+		MOTOR_TH_POLARITY  * MOTOR_TH_GEAR_RATIO  * PI / 180 *
+		(encoder_th  - encoder_home_th));
 }
 
-void set_home() {
+void set_home_offset() {
 	encoder_home_phi = MotorRotationCount(MOTOR_PHI);
 	encoder_home_th  = MotorRotationCount(MOTOR_TH);
+}
+
+InputState refresh_input() {
+	InputState input_state;
+
+	psp psp_state;
+	PSP_ReadButtonState(PSP_PORT, ADDR, psp_state);
+
+	input_state.critical_stop = !psp_state.square;
+	input_state.pwr_override  = !psp_state.r1 || !psp_state.r2;
+	input_state.set_home      = !psp_state.triang;
+	input_state.phi           = psp_state.r_j_x;
+	input_state.th            = psp_state.r_j_y;
+
+	return input_state;
+}
+
+char joystick_curve(char x) {
+	return sign(x) * abs(x * x * x * x) / (100 * 100 * 100);
+}
+
+void process_input(InputState input_state) {
+	if (input_state.critical_stop) {
+		// abort();
+		ForceOff(true);
+	}
+
+	if (input_state.pwr_override) {
+		long phi = input_state.phi;
+		pwr_phi = joystick_curve(input_state.phi) / 3;
+		pwr_th  = joystick_curve(input_state.th)  / 5;
+		drive_pwr(pwr_phi, pwr_th);
+	}
+
+	if (input_state.set_home) {
+		set_home_offset();
+	}
 }
 
 // Parses msg of format "(x,y)"
@@ -84,51 +143,77 @@ Vector2 parse_msg(string msg) {
 }
 
 task main() {
+	SetSleepTime(120);  // 2 hours
+
 	ClearScreen();
 	TextOut(0, LCD_LINE1, "EagleEyeTracker");
 	TextOut(0, LCD_LINE2, "Please home");
+	//NumOut( 0, LCD_LINE3, sin(PI/2));
 
-	set_home();
+	InputState input_state;
 
-	Angle2 pos;
+	do {
+		input_state = refresh_input();
+		input_state.critical_stop = false;
+		process_input(input_state);
+	} while (!input_state.set_home);
+
+	do {
+		input_state = refresh_input();
+		input_state.critical_stop = false;
+		process_input(input_state);
+	} while (input_state.set_home);
+
+	refresh_curr_pos();
+
+	Angle2 dpos;
 	Vector2 coords;
+	Angle2 setpoint = curr_pos;
+
 	unsigned long refresh_display_tick = CurrentTick();
 
 	while (true) {
 		string msg = "";
 		char status = ReceiveRemoteString(INBOX, true, msg);
+		//msg = "(800,0)";
+		//status = 0;
 
 		if (status != STAT_MSG_EMPTY_MAILBOX) {
 			coords = parse_msg(msg);
-			pos = coords_to_pos(coords);
+			dpos = coords_to_dpos(coords);
 		}
 
 		refresh_curr_pos();
 
+		setpoint = Angle2_add(curr_pos, dpos);
+		setpoint.phi = CONSTRAIN(setpoint.phi, -PI / 2, PI / 2);
+		setpoint.th  = CONSTRAIN(setpoint.th,  0.0,     PI / 2);
+
 		if (refresh_display_tick + 100 <= CurrentTick()) {
 			refresh_display_tick = CurrentTick();
 
-			string status_str = "";
+			string status_str = msg;
 			if (status == STAT_MSG_EMPTY_MAILBOX)
 				status_str = "Waiting for msg";
 
 			ClearScreen();
 			TextOut(0,   LCD_LINE1, "EagleEyeTracker");
 			TextOut(0,   LCD_LINE2, status_str);
-			NumOut( 0,   LCD_LINE5, pwr_phi);
-			NumOut( 6*4, LCD_LINE5, pwr_th);
-			TextOut(0,   LCD_LINE6, Angle2_str(pos));
-			TextOut(0,   LCD_LINE7, Vector2_str(coords));
-			TextOut(0,   LCD_LINE8, msg);
+			TextOut(0,   LCD_LINE3, msg);
+			TextOut(0,   LCD_LINE4, "curr;set;d;pwr");
+			TextOut(0,   LCD_LINE5, Angle2_str(curr_pos));
+			TextOut(0,   LCD_LINE6, Angle2_str(setpoint));
+			TextOut(0,   LCD_LINE7, Angle2_str(dpos));
+			NumOut( 0,   LCD_LINE8, pwr_phi);
+			NumOut( 6*4, LCD_LINE8, pwr_th);
 		}
 
-		// TODO use controller to home/pause driving/etc
-		if (ButtonPressed(BTNCENTER)) {
-			Coast(OUT_ABC);
-			continue;
-		}
+		input_state = refresh_input();
+		process_input(input_state);
 
-		drive_to_pos(pos);
+		if (!input_state.pwr_override) {
+			drive_to_setpoint(setpoint);
+		}
 	}
 }
 
