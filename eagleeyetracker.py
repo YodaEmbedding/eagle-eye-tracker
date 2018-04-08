@@ -35,7 +35,7 @@ while True:
     # Draw the tracks
     mask = (0.8 * mask).astype(dtype=np.uint8)
     frame = cv2.circle(frame, tuple(detector.pixel_location), 10, (0, 0, 255), -1)
-    for i, (new, old) in enumerate(zip(detector.good_new, detector.good_old)):
+    for i, (new, old) in enumerate(zip(detector.features, detector.features_prev)):
         a, b = new.ravel()
         c, d = old.ravel()
         mask = cv2.line(mask, (a, b), (c,d), color[i].tolist(), 2)
