@@ -24,14 +24,9 @@ while True:
         frame = cv2.flip(frame, 1)
 
     detector.next(frame)
-    raw_coords = np.flip(frame.shape[0:2], axis=0)
-    scale = 2. / np.max(raw_coords)
-    offset = 0.5 * np.array(raw_coords)
-    coords = scale * (detector.location - offset)
-    coords[1] = -coords[1]
 
     if ENABLE_COMM:
-        communicator.send_coords(*tuple(coords))
+        communicator.send_coords(*detector.location)
 
     # Create a mask image for drawing purposes
     if mask is None:
@@ -39,7 +34,7 @@ while True:
 
     # Draw the tracks
     mask = (0.8 * mask).astype(dtype=np.uint8)
-    frame = cv2.circle(frame, tuple(detector.location), 10, (0, 0, 255), -1)
+    frame = cv2.circle(frame, tuple(detector.pixel_location), 10, (0, 0, 255), -1)
     for i, (new, old) in enumerate(zip(detector.good_new, detector.good_old)):
         a, b = new.ravel()
         c, d = old.ravel()
