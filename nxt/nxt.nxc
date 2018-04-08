@@ -15,8 +15,8 @@ const byte MOTOR_TH  = OUT_B;
 
 const char MOTOR_PHI_POLARITY = 1;
 const char MOTOR_TH_POLARITY  = -1;
-const char MOTOR_PHI_PWR = 100;
-const char MOTOR_TH_PWR  = 100;
+const int  MOTOR_PHI_PWR = 200;
+const int  MOTOR_TH_PWR  = 100;
 const float GRAVITY_FACTOR = 2.0;
 
 const float CAMERA_PHI = PI / 6;
@@ -42,6 +42,47 @@ struct InputState {
 	char th;
 };
 
+// BADJOKE Declare structure theorem for Principal Ideal Domains
+struct PID {
+	float kp;
+	float ki;
+	float kd;
+	float ki_decay;
+
+	float err;
+	float err_integral;
+	float err_derivative;
+};
+
+PID PID_init(float kp, float ki, float kd, float ki_decay=0.0) {
+	PID pid;
+	pid.kp = kp;
+	pid.ki = ki;
+	pid.kd = kd;
+	pid.ki_decay = ki_decay;
+	pid.err = 0.0;
+	pid.err_integral = 0.0;
+	pid.err_derivative = 0.0;
+	return pid;
+}
+
+// TODO consider non-float for better accuracy
+// TODO integral normalization/decay term (e.g. 1 - 0.5 * dt)?
+float PID_next(PID& pid, float err, float dt) {
+	if (dt > 0.0) {
+		pid.err_derivative = (err - pid.err) / dt;
+		pid.err_integral *= pow(1 - pid.ki_decay, 1 / dt);
+		pid.err_integral += 0.5 * (pid.err + err) * dt;
+	}
+
+	pid.err = err;
+
+	return (
+		pid.kp * pid.err +
+		pid.ki * pid.err_integral +
+		pid.kd * pid.err_derivative);
+}
+
 // Convert input camera coordinates to delta position
 Angle2 coords_to_dpos(Vector2 coords) {
 	// TODO quaternions, rotations, projective geometry?
@@ -57,19 +98,41 @@ void drive_pwr(int pwr_phi, int pwr_th) {
 }
 
 // Drive to absolute position in terms of (phi, th)
-void drive_to_setpoint(Angle2 setpoint) {
-	// TODO PID
+void drive_to_setpoint(Angle2 setpoint, float dt, bool enable_pid) {
 	// TODO predict point location in time t using velocity (store velocity in which coordinate sys?)
 	// TODO smarter pathing (geodesics kappa... also use current velocity and constraints on geometry)
 	// TODO resistance/drag modelling
+	// TODO smarter PID? float err = setpoint - curr_pos;  // maybe compute path length?
 
-	Angle2 dpos = Angle2_sub(setpoint, curr_pos);
+	static PID pid_phi;
+	static PID pid_th;
+	static bool first_run = true;
 
-	int pwr_gravity = -GRAVITY_FACTOR * sin(curr_pos.th);
+	if (first_run) {
+		first_run = false;
+		pid_phi = PID_init(1.0, 0.4, 0.0, 0.9);
+		pid_th  = PID_init(1.0, 0.2, 0.0, 0.9);
+	}
+
+	// TODO this doesn't really make too much sense...
+	// the geometry means that dpos is kind of meaningless
+	Angle2 err = Angle2_sub(setpoint, curr_pos);
+	Angle2 dpos = err;
+
+	if (enable_pid) {
+		dpos.phi = CONSTRAIN(PID_next(pid_phi, err.phi, dt),
+			-PI - curr_pos.phi, PI - curr_pos.phi);
+		dpos.th  = CONSTRAIN(PID_next(pid_th,  err.th,  dt),
+			-PI / 2 - curr_pos.th, PI / 2 - curr_pos.th);
+	}
+	else {
+		first_run = true;
+	}
 
 	pwr_phi = dpos.phi * MOTOR_PHI_PWR;
-	pwr_th  = dpos.th  * MOTOR_TH_PWR  + pwr_gravity;
+	pwr_th  = dpos.th  * MOTOR_TH_PWR - GRAVITY_FACTOR * sin(curr_pos.th);
 
+	// TODO reduce constraints?
 	pwr_phi = CONSTRAIN(pwr_phi, -50, 50);
 	pwr_th  = CONSTRAIN(pwr_th,  -30, 30);
 
@@ -167,12 +230,16 @@ task main() {
 	Angle2 setpoint = curr_pos;
 
 	unsigned long refresh_display_tick = CurrentTick();
+	unsigned long msg_tick = CurrentTick();
 
 	while (true) {
+		unsigned long loop_tick = CurrentTick();
+
 		string msg = "";
 		char status = ReceiveRemoteString(INBOX, true, msg);
 
 		if (status != STAT_MSG_EMPTY_MAILBOX) {
+			msg_tick = CurrentTick();
 			coords = parse_msg(msg);
 			dpos = coords_to_dpos(coords);
 		}
@@ -206,7 +273,9 @@ task main() {
 		process_input(input_state);
 
 		if (!input_state.pwr_override) {
-			drive_to_setpoint(setpoint);
+			float dt = 0.001 * (CurrentTick() - loop_tick);
+			bool enable_pid = CurrentTick() - msg_tick < 250;
+			drive_to_setpoint(setpoint, dt, enable_pid);
 		}
 	}
 }

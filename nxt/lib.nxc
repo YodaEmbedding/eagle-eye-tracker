@@ -3,21 +3,27 @@
 #define MAX(a, b) (a > b ? a : b)
 #define CONSTRAIN(x, a, b) MAX(a, MIN(x, b))
 
-float sin(float x) {
+/*
+inline float sin(float x) {
 	float x_deg = x * 180 / PI;
 	return 0.01 * Sin(x_deg);
 }
 
-float cos(float x) {
+inline float cos(float x) {
 	float x_deg = x * 180 / PI;
 	return 0.01 * Cos(x_deg);
 }
 
-float tan(float x) {
+inline float tan(float x) {
 	return sin(x) / cos(x);
 	//float x_deg = x * 180 / PI;
 	//return 0.01 * Tan(x_deg);
 }
+
+inline float pow(float base, float exponent) {
+	return Pow(base, exponent);
+}
+*/
 
 struct Angle2 {
 	float phi;
