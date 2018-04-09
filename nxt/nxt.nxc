@@ -5,6 +5,8 @@
 #include "lib.nxc"
 #include "PSP-Nx-lib-edit.nxc"
 
+//#define ENABLE_PID_TUNE
+
 const byte INBOX  = 1;
 const byte OUTBOX = 2;
 const byte ADDR = 0x02;
@@ -17,6 +19,7 @@ const char MOTOR_PHI_POLARITY = 1;
 const char MOTOR_TH_POLARITY  = -1;
 const int  MOTOR_PHI_PWR = 200;
 const int  MOTOR_TH_PWR  = 100;
+
 const float GRAVITY_FACTOR = 2.0;
 
 const float CAMERA_PHI = PI / 6;
@@ -54,6 +57,10 @@ struct PID {
 	float err_derivative;
 };
 
+// TODO BADCODE
+PID pid_phi;
+PID pid_th;
+
 PID PID_init(float kp, float ki, float kd, float ki_decay=0.0) {
 	PID pid;
 	pid.kp = kp;
@@ -73,9 +80,8 @@ float PID_next(PID& pid, float err, float dt) {
 		pid.err_derivative = (err - pid.err) / dt;
 		pid.err_integral *= pow(1 - pid.ki_decay, 1 / dt);
 		pid.err_integral += 0.5 * (pid.err + err) * dt;
+		pid.err = err;
 	}
-
-	pid.err = err;
 
 	return (
 		pid.kp * pid.err +
@@ -87,8 +93,34 @@ float PID_next(PID& pid, float err, float dt) {
 Angle2 coords_to_dpos(Vector2 coords) {
 	// TODO quaternions, rotations, projective geometry?
 	Angle2 dpos;
+
+	float x_scale = 0.6; // 0.6;
+	float x = x_scale * coords.x;
+	float y = x_scale * coords.y;
+
+	float r = sqrt(x * x + y * y);
+	float c = atan(r);
+
+	//if (r < 1e-4) {
+	//    // Good ol' nominal geodesic heat flow algebraic topological invariant sub-r module ring of finite abelian gnomic anti quarkfield
+	//    dpos.phi = -XY_SCALE * coords.x * sin(curr_pos.th);
+	//    dpos.th  = -XY_SCALE * coords.y;
+	//}
+	//else {
+	//    // Gnomic projection
+	//    float th = PI / 2 - curr_pos.th;
+
+	//    dpos.phi = -atan2(x * sin(c),
+	//        r * cos(th) * cos(c) - y * sin(th) * sin(c));
+
+	//    dpos.th  = -asin(
+	//        cos(c) * sin(th) +
+	//        y * sin(c) * cos(th) / r);
+	//}
+
 	dpos.phi = -XY_SCALE * coords.x * sin(curr_pos.th);
 	dpos.th  = -XY_SCALE * coords.y;
+
 	return dpos;
 }
 
@@ -104,14 +136,18 @@ void drive_to_setpoint(Angle2 setpoint, float dt, bool enable_pid) {
 	// TODO resistance/drag modelling
 	// TODO smarter PID? float err = setpoint - curr_pos;  // maybe compute path length?
 
-	static PID pid_phi;
-	static PID pid_th;
+#ifdef ENABLE_PID
+	enable_pid = true;
+#endif
+
+	//static PID pid_phi;
+	//static PID pid_th;
 	static bool first_run = true;
 
 	if (first_run) {
 		first_run = false;
-		pid_phi = PID_init(1.0, 0.4, 0.0, 0.9);
-		pid_th  = PID_init(1.0, 0.2, 0.0, 0.9);
+		pid_phi = PID_init(1.0, 0.0, 0.0, 0.0);
+		pid_th  = PID_init(1.0, 0.0, 0.0, 0.0);
 	}
 
 	// TODO this doesn't really make too much sense...
@@ -133,8 +169,15 @@ void drive_to_setpoint(Angle2 setpoint, float dt, bool enable_pid) {
 	pwr_th  = dpos.th  * MOTOR_TH_PWR - GRAVITY_FACTOR * sin(curr_pos.th);
 
 	// TODO reduce constraints?
+#ifndef ENABLE_PID_TUNE
 	pwr_phi = CONSTRAIN(pwr_phi, -50, 50);
 	pwr_th  = CONSTRAIN(pwr_th,  -30, 30);
+#else
+	pwr_phi = CONSTRAIN(pwr_phi, -100, 100);
+	pwr_th  = CONSTRAIN(pwr_th,  -100, 100);
+#endif
+
+	// pwr_phi = sign(pwr_phi) * 15;
 
 	drive_pwr(pwr_phi, pwr_th);
 }
@@ -167,6 +210,13 @@ InputState refresh_input() {
 	input_state.set_home      = !psp_state.triang;
 	input_state.phi           = psp_state.r_j_x;
 	input_state.th            = psp_state.r_j_y;
+
+	// TODO BADCODE
+	//if(!psp_state.a) pid_phi.kp += 0.1;
+	//if(!psp_state.c) pid_phi.kp -= 0.1;
+
+	//if(!psp_state.b) pid_phi.kp += 1.0;
+	//if(!psp_state.d) pid_phi.kp -= 1.0;
 
 	return input_state;
 }
@@ -249,6 +299,11 @@ task main() {
 		setpoint = Angle2_add(curr_pos, dpos);
 		setpoint.phi = CONSTRAIN(setpoint.phi, -PI / 2, PI / 2);
 		setpoint.th  = CONSTRAIN(setpoint.th,  0.0,     PI / 2);
+
+#ifdef ENABLE_PID_TUNE
+		setpoint.phi = 0.0;
+		setpoint.th  = PI / 2;
+#endif
 
 		if (refresh_display_tick + 100 <= CurrentTick()) {
 			refresh_display_tick = CurrentTick();
