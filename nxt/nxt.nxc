@@ -146,8 +146,8 @@ void drive_to_setpoint(Angle2 setpoint, float dt, bool enable_pid) {
 
 	if (first_run) {
 		first_run = false;
-		pid_phi = PID_init(1.0, 0.0, 0.0, 0.0);
-		pid_th  = PID_init(1.0, 0.0, 0.0, 0.0);
+		pid_phi = PID_init(1.0, 0.05, 0.0, 0.9);
+		pid_th  = PID_init(1.0, 0.05, 0.0, 0.9);
 	}
 
 	// TODO this doesn't really make too much sense...
@@ -168,6 +168,10 @@ void drive_to_setpoint(Angle2 setpoint, float dt, bool enable_pid) {
 	pwr_phi = dpos.phi * MOTOR_PHI_PWR;
 	pwr_th  = dpos.th  * MOTOR_TH_PWR - GRAVITY_FACTOR * sin(curr_pos.th);
 
+	// TODO Basic af method for quick and dirty resistance offsetting
+	if (abs(err.phi) > 3.0 * PI / 180)
+	pwr_phi += sign(pwr_phi) * 10;
+
 	// TODO reduce constraints?
 #ifndef ENABLE_PID_TUNE
 	pwr_phi = CONSTRAIN(pwr_phi, -50, 50);
@@ -176,8 +180,6 @@ void drive_to_setpoint(Angle2 setpoint, float dt, bool enable_pid) {
 	pwr_phi = CONSTRAIN(pwr_phi, -100, 100);
 	pwr_th  = CONSTRAIN(pwr_th,  -100, 100);
 #endif
-
-	// pwr_phi = sign(pwr_phi) * 15;
 
 	drive_pwr(pwr_phi, pwr_th);
 }
