@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 
+# Electron
+node_modules/
+
 # NXT
 *.bak
 *.sym

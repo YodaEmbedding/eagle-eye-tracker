@@ -1,0 +1,15 @@
+{
+  "name": "eagle-eye-tracker-gui",
+  "version": "1.0.0",
+  "description": "GUI for Eagle Eye Tracker",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Mateen Ulhaq",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^2.0.2"
+  }
+}

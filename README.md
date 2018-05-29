@@ -6,7 +6,6 @@ Group members: Mateen Ulhaq, Bud Yarrow, Arman Athwal, Naim Tejani, Victor Yun, 
 
 ## Installation
 
-
 Install the following:
 
  - [Anaconda 3](https://www.anaconda.com/download/) (with opencv, numpy, pyzmq)
@@ -15,6 +14,8 @@ Install the following:
  - [BricxCC test release](http://bricxcc.sourceforge.net/test_releases/test_release20131007.zip) (overwrite your existing BricxCC installation with this)
  - [libusb-win32](https://sourceforge.net/projects/libusb-win32/files/libusb-win32-releases/1.2.6.0/libusb-win32-devel-filter-1.2.6.0.exe) (install for port used by NXT USB)
  - [NXT Fantom Drivers](https://www.lego.com/r/www/r/mindstorms/-/media/franchises/mindstorms%202014/downloads/firmware%20and%20software/nxt%20software/nxt%20fantom%20drivers%20v120.zip?l.r2=-964392510)
+ - Node Package Manager (npm)
+ - Electron
 
 Set your `PATH` environment variable to include the following paths:
 
@@ -35,6 +36,15 @@ Compile, download, and run the program on the NXT:
 Now simply:
 
     python eagleeyetracker.py
+
+To run the GUI, first ensure that Electron is present:
+
+    cd gui
+    npm install --save-dev electron
+
+Then simply run:
+
+    npm start
 
 ## TODO
 
