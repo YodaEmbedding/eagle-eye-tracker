@@ -1,0 +1,104 @@
+html,
+body {
+  background: #222733;
+  color: #ddddc7;
+  font-family: -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Helvetica, Arial, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+/* Should this really be nav...? */
+nav {
+  padding: 1%;  /* This kind of messes up the vertical position */
+}
+
+.brand-logo {
+  color: #eecc87;
+  font-size: xx-large;
+  font-weight: bold;
+  padding: 0.5em;
+}
+
+.center {
+  text-align: center;
+}
+
+.control-button {
+  background-color: #3faa44;
+  border-radius: 5px;
+  border: none;
+  color: #cec;
+  display: inline-block;
+  font-size: large;
+  min-width: 50px;
+  padding: 10px 32px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.controls {
+  margin: 0.5em;
+  margin-top: 1.0em;
+  text-align: center;
+}
+
+.flexbox {
+  padding: 1%;
+  width: 100%;
+}
+
+.flexbox:after {
+  clear: both;
+  content: "";
+  display: table;
+}
+
+.left {
+  border-right: 10px solid transparent;
+  vertical-align: top;
+  width: 50%;
+  /* display: inline-block; */
+  /* float: left; */
+  /* min-width: 200px; */
+}
+
+.nav-wrapper {
+  background: #111722;
+  border-radius: 10px;
+}
+
+.right {
+  border-left: 10px solid transparent;
+  vertical-align: top;
+  /* margin: auto; */
+  /* margin-left: 40%; */
+}
+
+.status-false {
+  background: #955;
+  border-bottom: 1px solid #a66;
+  border-top: 1px solid #a66;
+  color: #ecc;
+  padding: 0.5em;
+}
+
+.status-panel {
+  margin: 0.5em;
+}
+
+.wrapper {
+  background: #111722;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  padding: 0.5em;
+}
+
+/*
+  TODO:
+
+  Make this look cooler... maybe like this:
+  https://stackoverflow.com/questions/44455257/how-to-create-beautiful-uis-for-standalone-python-guis
+
+  Or use materializecss framework
+*/
+

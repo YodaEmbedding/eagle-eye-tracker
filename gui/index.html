@@ -2,40 +2,79 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Hello World!</title>
-    <link rel="stylesheet" href="index.css">
+    <title>Eagle Eye Tracker</title>
+    <link rel="stylesheet" href="style.css">
   </head>
   <body>
-    <h1>Eagle Eye Tracker</h1>
-    <h2>Eagle Eye Systems</h2>
-    We are using
+    <nav>
+      <div class="nav-wrapper">
+        <p class="brand-logo center">Eagle Eye Tracker</p>
+        <!-- <p class="brand-logo center">Eagle Eye Systems</p> -->
+      </div>
+    </nav>
+
+    <!-- We are using
     node     <script>document.write(process.versions.node)    </script>,
     Chrome   <script>document.write(process.versions.chrome)  </script>, and
-    Electron <script>document.write(process.versions.electron)</script>.
-
-    <br />
-    <br />
+    Electron <script>document.write(process.versions.electron)</script>. -->
 
     <!-- logo? with transparency -->
     <!-- <img src="logo.png" /> -->
 
-    <table>
+    <table class="flexbox">
       <tr>
-        <td>Tracker position:</td>
-        <td>(0.000, 0.000)</td>
-      </tr>
-      <tr>
-        <td>Object  position:</td>
-        <td>(0.000, 0.000)</td>
-      </tr>
-      <tr>
-        <td>Tracker velocity:</td>
-        <td>(0.000, 0.000)</td>
-      </tr>
-      <tr>
-        <td>Object  velocity:</td>
-        <td>(0.000, 0.000)</td>
+
+        <td class="left">
+          <div id="status" class="wrapper">
+            <h3>Status</h3>
+            <div class="status-panel">
+            <div class="status-false">Not connected</div>
+            <div class="status-false">Not scanning </div>
+            <div class="status-false">Not tracking </div>
+            </div>
+            <div class="controls">
+              <button class="control-button">Start</button>
+            </div>
+          </div>
+          <div id="graph" class="wrapper">
+            <h3>Error</h3>
+            <div style="height: 300px; background: #000">
+            </div>
+          </div>
+        </td>
+
+        <td class="right">
+          <div id="stats" class="wrapper">
+            <h3>Stats</h3>
+            <table>
+              <tr>
+                <td>Tracker position:</td>
+                <td>(0.000, 0.000)</td>
+              </tr>
+              <tr>
+                <td>Object  position:</td>
+                <td>(0.000, 0.000)</td>
+              </tr>
+              <tr>
+                <td>Tracker velocity:</td>
+                <td>(0.000, 0.000)</td>
+              </tr>
+              <tr>
+                <td>Object  velocity:</td>
+                <td>(0.000, 0.000)</td>
+              </tr>
+            </table>
+          </div>
+
+          <div id="video" class="wrapper">
+            <h3>Live video</h3>
+            <div style="height: 300px; background: #000">
+            </div>
+          </div>
+        </td>
+
       </tr>
     </table>
+
   </body>
 </html>
