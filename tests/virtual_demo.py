@@ -11,29 +11,65 @@ from mpl_toolkits import mplot3d
 
 np.set_printoptions(precision=3)
 
-class WorldState:
+class CoordinateGenerator:
+    def __init__(self):
+        self.coordinate = (0.1, 0.1)
+
+    def get_next_coordinate(dt):
+        return self.coordinate
+
+class MotionController:
     def __init__(self):
         # Current position in Euler angles
         # Consider storing current position as a quaternion as well...?
         self.phi = 0.0
         self.th  = 0.0
 
-    def draw(self, frame_number, ax):
-        self.phi += 1 / 16 * np.pi
-        square2 = apply_euler_rotation(square, self.phi, self.th)
+        self.phi_pwr = 1.0
+        self.th_pwr  = 0.0
 
-        phi = 0 / 16 * np.pi
-        th  = -frame_number / 16 * np.pi
-        square3 = apply_euler_rotation(square, phi, th)
+    # TODO time delays, inertia, etc?
+    def update(self, dt):
+        self.phi += self.phi_pwr * dt
+        self.th  += self.th_pwr  * dt
 
+    def set_motor_power(self, phi_pwr, th_pwr):
+        self.phi_pwr = phi_pwr
+        self.th_pwr  = th_pwr
+
+class WorldState:
+    def __init__(self):
+        self.motion_controller = MotionController()
+
+        # TODO isn't it strange that this class is managing squares?
+        w = 0.4
+        h = 0.3
+        self._square_orig = np.array([
+            np.quaternion(0, 1,  w,  h),  # A
+            np.quaternion(0, 1, -w,  h),  # B
+            np.quaternion(0, 1, -w, -h),  # C
+            np.quaternion(0, 1,  w, -h),  # D
+            np.quaternion(0, 1,  w,  h),  # A
+            np.quaternion(0, 1, -w, -h),  # C
+            np.quaternion(0, 1, -w,  h),  # B
+            np.quaternion(0, 1,  w, -h),  # D
+        ])
+
+    def update(self):
+        dt = 50 / 1000
+        self.motion_controller.update(dt)
+        self.square = apply_euler_rotation(
+            self._square_orig,
+            self.motion_controller.phi,
+            self.motion_controller.th)
+
+    def draw(self, ax):
         origin = np.zeros((1, 3))
 
         ax.clear()
         ax.scatter3D(*tuple(origin.T), color="red")
         draw_sphere(ax, 8, 16, color="#cccccc")
-        ax.plot3D(*quats_to_plot_coords(square),  color='#bb55ff')
-        ax.plot3D(*quats_to_plot_coords(square2), color='#ffbb55')
-        ax.plot3D(*quats_to_plot_coords(square3), color='#55bbff')
+        ax.plot3D(*quats_to_plot_coords(self.square), color='#55bbff')
 
         plt.axis('off')
         ax.grid(False)
@@ -96,19 +132,6 @@ def set_axes_equal(ax):
     radius = 0.5 * np.max(np.abs(limits[:, 1] - limits[:, 0]))
     set_axes_radius(ax, origin, radius)
 
-w = 0.5
-h = 0.3
-square = np.array([
-    np.quaternion(0, 1,  w,  h),  # A
-    np.quaternion(0, 1, -w,  h),  # B
-    np.quaternion(0, 1, -w, -h),  # C
-    np.quaternion(0, 1,  w, -h),  # D
-    np.quaternion(0, 1,  w,  h),  # A
-    np.quaternion(0, 1, -w, -h),  # C
-    np.quaternion(0, 1, -w,  h),  # B
-    np.quaternion(0, 1,  w, -h),  # D
-])
-
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 ax.set_aspect('equal')
@@ -119,15 +142,23 @@ ax.view_init(elev=0., azim=0.)
 
 state = WorldState()
 
-update = partial(state.draw, ax=ax)
+def update(frame_number):
+    state.update()
+    state.draw(ax)
+
 animation = FuncAnimation(fig, update, 65536, interval=50, blit=False)
 
 plt.show()
 
 # TODO
 # construct point follower (follows a point it sees on "camera")
+# Motioncontroller/Robot class? (Maintains phi, th, moves motors at given velocities)
+# Tracker class? (Finds best path for robot... or maybe put this in robot)
+# ImgProc simulator (e.g. always on top right of square for now...)
+
 # construct model with motors (with velocity curves; max velocity), impedances, latency
 # machine learn control hyperparameters (differentiable programming or genetic)
 # consider latency from camera->imageproc->coords too
 # switch to plot.ly, Mayavi2, etc?
+# renormalize after rotations? (prevents drift from surface of sphere)
 
