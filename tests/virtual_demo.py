@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-from functools import partial
-
 import matplotlib.pyplot as plt
 import numpy as np
 import quaternion
@@ -11,15 +9,57 @@ from mpl_toolkits import mplot3d
 
 np.set_printoptions(precision=3)
 
+# TODO make use of these classes so that we don't get weird sign issues
+# EDIT: Nevermind, I got rid of sign issues by changing convention for Euler angles
+class XY:
+    __slots__ = ['x', 'y']
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    # Does this really make any sense?
+    # This is not truly a correspondence between the two coordinate systems.
+    def to_euler(self):
+        return Euler(self.x, self.y)
+
+class Euler:
+    __slots__ = ['phi', 'th']
+
+    def __init__(self, phi, th):
+        self.phi = phi
+        self.th  = th
+
+    # Does this really make any sense?
+    # This is not truly a correspondence between the two coordinate systems.
+    def to_xy(self):
+        return (self.phi, self.th)
+
+# Maybe a more apt conversion is from xy to "quaternion" coming out from x axis
+
 class CoordinateGenerator:
     def __init__(self):
-        self.coordinate = (0.1, 0.1)
+        self.coord = (0.2, 0.2)
+        self.width  = 0.4
+        self.height = 0.3
 
-    def get_next_coordinate(dt):
-        return self.coordinate
+    def draw(self, ax, rot):
+        v = self.get_offset_quat()
+        v_ = apply_rotation(v, rot)
+        ax.scatter3D(*quats_to_plot_coords([v_]), color="#ff55bb")
+
+    def get_offset_quat(self):
+        return np.quaternion(0., 1.,
+            -self.width  * self.coord[0],
+             self.height * self.coord[1])
+
+    def get_next_coordinate(self, dt):
+        return self.coord
 
 class MotionController:
     def __init__(self):
+        self.coordinate_generator = CoordinateGenerator()
+
         # Current position in Euler angles
         # Consider storing current position as a quaternion as well...?
         self.phi = 0.0
@@ -28,23 +68,9 @@ class MotionController:
         self.phi_pwr = 1.0
         self.th_pwr  = 0.0
 
-    # TODO time delays, inertia, etc?
-    def update(self, dt):
-        self.phi += self.phi_pwr * dt
-        self.th  += self.th_pwr  * dt
-
-    def set_motor_power(self, phi_pwr, th_pwr):
-        self.phi_pwr = phi_pwr
-        self.th_pwr  = th_pwr
-
-class WorldState:
-    def __init__(self):
-        self.motion_controller = MotionController()
-
-        # TODO isn't it strange that this class is managing squares?
-        w = 0.4
-        h = 0.3
-        self._square_orig = np.array([
+        w = self.coordinate_generator.width
+        h = self.coordinate_generator.height
+        self._rect_drawable_orig = np.array([
             np.quaternion(0, 1,  w,  h),  # A
             np.quaternion(0, 1, -w,  h),  # B
             np.quaternion(0, 1, -w, -h),  # C
@@ -55,13 +81,31 @@ class WorldState:
             np.quaternion(0, 1,  w, -h),  # D
         ])
 
-    def update(self):
-        dt = 50 / 1000
-        self.motion_controller.update(dt)
-        self.square = apply_euler_rotation(
-            self._square_orig,
-            self.motion_controller.phi,
-            self.motion_controller.th)
+    def draw(self, ax):
+        ax.plot3D(*quats_to_plot_coords(self.rect_drawable), color='#55bbff')
+        self.coordinate_generator.draw(ax, self.rot)
+
+    def set_motor_power(self, phi_pwr, th_pwr):
+        self.phi_pwr = phi_pwr
+        self.th_pwr  = th_pwr
+
+    # TODO time delays, inertia, etc?
+    def update(self, dt):
+        coord = self.coordinate_generator.get_next_coordinate(dt)
+
+        # TODO change this to depend on quaternion?
+        self.phi_pwr = coord[0]
+        self.th_pwr  = coord[1]
+
+        self.phi += self.phi_pwr * dt
+        self.th  += self.th_pwr  * dt
+        self.rot = get_euler_rotation_quat(self.phi, self.th)
+
+        self.rect_drawable = apply_rotation(self._rect_drawable_orig, self.rot)
+
+class WorldState:
+    def __init__(self):
+        self.motion_controller = MotionController()
 
     def draw(self, ax):
         origin = np.zeros((1, 3))
@@ -69,31 +113,31 @@ class WorldState:
         ax.clear()
         ax.scatter3D(*tuple(origin.T), color="red")
         draw_sphere(ax, 8, 16, color="#cccccc")
-        ax.plot3D(*quats_to_plot_coords(self.square), color='#55bbff')
+        self.motion_controller.draw(ax)
 
         plt.axis('off')
         ax.grid(False)
         set_axes_radius(ax, origin[0], 1)
 
-def get_rotation_quaternion(axis, angle):
+    def update(self):
+        dt = 50 / 1000
+        self.motion_controller.update(dt)
+
+def apply_rotation(v, rot):
+    return rot * v * rot.inverse()
+
+def get_euler_rotation_quat(phi, th):
+    th_axis  = np.array([0., 1., 0.])
+    phi_axis = np.array([0., 0., 1.])
+    th_quat  = get_rotation_quat(th_axis,  -th)
+    phi_quat = get_rotation_quat(phi_axis, -phi)
+    return phi_quat * th_quat
+
+def get_rotation_quat(axis, angle):
     """[cos(a/2), sin(a/2)*x, sin(a/2)*y, sin(a/2)*z]"""
     th = 0.5 * angle
     q = np.concatenate(([np.cos(th)], np.sin(th) * axis))
     return quaternion.as_quat_array(q)
-
-def apply_rotation(v, axis, angle):
-    R = get_rotation_quaternion(axis, angle)
-    return R * v * R.inverse()
-
-def apply_euler_rotation(v, phi, th):
-    th_axis  = np.array([0., 1., 0.])
-    phi_axis = np.array([0., 0., 1.])
-
-    v_ = v
-    v_ = apply_rotation(v_, th_axis,  th)
-    v_ = apply_rotation(v_, phi_axis, phi)
-
-    return v_
 
 def quats_to_plot_coords(q):
     arr = quaternion.as_float_array(q)
@@ -151,14 +195,14 @@ animation = FuncAnimation(fig, update, 65536, interval=50, blit=False)
 plt.show()
 
 # TODO
-# construct point follower (follows a point it sees on "camera")
-# Motioncontroller/Robot class? (Maintains phi, th, moves motors at given velocities)
-# Tracker class? (Finds best path for robot... or maybe put this in robot)
-# ImgProc simulator (e.g. always on top right of square for now...)
-
-# construct model with motors (with velocity curves; max velocity), impedances, latency
+# Motor class: Velocity curves (with peak velocity), impedances
+# ControlSystem class
+# Latency
+# Document sign, axis conventions
 # machine learn control hyperparameters (differentiable programming or genetic)
+# bounds of motion
+# reversal of orientation
 # consider latency from camera->imageproc->coords too
-# switch to plot.ly, Mayavi2, etc?
 # renormalize after rotations? (prevents drift from surface of sphere)
+# switch to plot.ly, Mayavi2, etc?
 
