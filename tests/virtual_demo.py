@@ -9,19 +9,12 @@ from mpl_toolkits import mplot3d
 
 np.set_printoptions(precision=3)
 
-# TODO make use of these classes so that we don't get weird sign issues
-# EDIT: Nevermind, I got rid of sign issues by changing convention for Euler angles
 class XY:
     __slots__ = ['x', 'y']
 
     def __init__(self, x, y):
         self.x = x
         self.y = y
-
-    # Does this really make any sense?
-    # This is not truly a correspondence between the two coordinate systems.
-    def to_euler(self):
-        return Euler(self.x, self.y)
 
 class Euler:
     __slots__ = ['phi', 'th']
@@ -30,31 +23,44 @@ class Euler:
         self.phi = phi
         self.th  = th
 
-    # Does this really make any sense?
-    # This is not truly a correspondence between the two coordinate systems.
-    def to_xy(self):
-        return (self.phi, self.th)
+# VirtualMotor... inherits from Motor?
+class Motor:
+    def __init__(self):
+        self.position = 0.0
+        self.velocity = 0.0
+        self.velocity_setpoint = 0.0
+        self.accel_max = 1.0
+        self.velocity_max = 3.0
 
-# Maybe a more apt conversion is from xy to "quaternion" coming out from x axis
+    def set_velocity_setpoint(self, velocity_setpoint):
+        self.velocity_setpoint = velocity_setpoint
+
+    def update(self, dt):
+        dv = np.clip(self.velocity_setpoint - self.velocity,
+            -self.accel_max * dt,
+             self.accel_max * dt)
+        self.velocity = np.clip(self.velocity + dv,
+            -self.velocity_max, self.velocity_max)
+        self.position += dt * self.velocity
 
 class CoordinateGenerator:
     def __init__(self):
-        self.coord = (0.2, 0.2)
+        self.coord = (1.0, 0.05)
         self.width  = 0.4
         self.height = 0.3
 
     def draw(self, ax, rot):
-        v = self.get_offset_quat()
+        v = self._get_offset_quat()
         v_ = apply_rotation(v, rot)
         ax.scatter3D(*quats_to_plot_coords([v_]), color="#ff55bb")
 
-    def get_offset_quat(self):
+    def get_next_coordinate(self, dt):
+        return self.coord
+
+    def _get_offset_quat(self):
         return np.quaternion(0., 1.,
             -self.width  * self.coord[0],
              self.height * self.coord[1])
-
-    def get_next_coordinate(self, dt):
-        return self.coord
 
 class MotionController:
     def __init__(self):
@@ -62,11 +68,8 @@ class MotionController:
 
         # Current position in Euler angles
         # Consider storing current position as a quaternion as well...?
-        self.phi = 0.0
-        self.th  = 0.0
-
-        self.phi_pwr = 1.0
-        self.th_pwr  = 0.0
+        self.motor_phi = Motor()
+        self.motor_th  = Motor()
 
         w = self.coordinate_generator.width
         h = self.coordinate_generator.height
@@ -85,21 +88,23 @@ class MotionController:
         ax.plot3D(*quats_to_plot_coords(self.rect_drawable), color='#55bbff')
         self.coordinate_generator.draw(ax, self.rot)
 
-    def set_motor_power(self, phi_pwr, th_pwr):
-        self.phi_pwr = phi_pwr
-        self.th_pwr  = th_pwr
-
     # TODO time delays, inertia, etc?
     def update(self, dt):
         coord = self.coordinate_generator.get_next_coordinate(dt)
 
         # TODO change this to depend on quaternion?
-        self.phi_pwr = coord[0]
-        self.th_pwr  = coord[1]
+        phi_pwr = 10000 * coord[0]
+        th_pwr  = 10000 * coord[1]
 
-        self.phi += self.phi_pwr * dt
-        self.th  += self.th_pwr  * dt
-        self.rot = get_euler_rotation_quat(self.phi, self.th)
+        self.motor_phi.set_velocity_setpoint(phi_pwr)
+        self.motor_th .set_velocity_setpoint(th_pwr)
+
+        self.motor_phi.update(dt)
+        self.motor_th .update(dt)
+
+        self.rot = get_euler_rotation_quat(
+            self.motor_phi.position,
+            self.motor_th.position)
 
         self.rect_drawable = apply_rotation(self._rect_drawable_orig, self.rot)
 
@@ -157,26 +162,10 @@ def set_axes_radius(ax, origin, radius):
     ax.set_ylim3d([origin[1] - radius, origin[1] + radius])
     ax.set_zlim3d([origin[2] - radius, origin[2] + radius])
 
-def set_axes_equal(ax):
-    '''Make axes of 3D plot have equal scale so that spheres appear as spheres,
-    cubes as cubes, etc..  This is one possible solution to Matplotlib's
-    ax.set_aspect('equal') and ax.axis('equal') not working for 3D.
-
-    Input
-      ax: a matplotlib axis, e.g., as output from plt.gca().
-    '''
-
-    limits = np.array([
-        ax.get_xlim3d(),
-        ax.get_ylim3d(),
-        ax.get_zlim3d(),
-    ])
-
-    origin = np.mean(limits, axis=1)
-    radius = 0.5 * np.max(np.abs(limits[:, 1] - limits[:, 0]))
-    set_axes_radius(ax, origin, radius)
-
+plt.style.use('dark_background')
 fig = plt.figure()
+fig.set_facecolor('#111111')
+fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
 ax = plt.axes(projection='3d')
 ax.set_aspect('equal')
 ax.set_xlabel('x')
@@ -202,7 +191,10 @@ plt.show()
 # machine learn control hyperparameters (differentiable programming or genetic)
 # bounds of motion
 # reversal of orientation
+# Model inertia of camera mass (not just motors)
 # consider latency from camera->imageproc->coords too
 # renormalize after rotations? (prevents drift from surface of sphere)
 # switch to plot.ly, Mayavi2, etc?
+# Conversion from xy to "quaternion" coming out from x axis
+# Graph error metric
 
