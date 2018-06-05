@@ -17,6 +17,7 @@ class Motor:
             -self.accel_max * dt,
              self.accel_max * dt)
         self.velocity = np.clip(self.velocity + dv,
-            -self.velocity_max, self.velocity_max)
+            -self.velocity_max,
+             self.velocity_max)
         self.position += dt * self.velocity
 

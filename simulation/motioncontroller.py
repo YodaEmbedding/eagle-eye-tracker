@@ -9,14 +9,12 @@ class MotionController:
     def __init__(self):
         self.coordinate_generator = CoordinateGenerator()
 
-        # Current position in Euler angles
-        # Consider storing current position as a quaternion as well...?
         self.motor_phi = Motor()
         self.motor_th  = Motor()
 
-        # self.rot = euler_to_quat(
-        #     self.motor_phi.position,
-        #     self.motor_th.position)
+        self.rot = euler_to_quat(
+            self.motor_phi.position,
+            self.motor_th.position)
 
         w = self.coordinate_generator.width
         h = self.coordinate_generator.height
@@ -45,18 +43,14 @@ class MotionController:
             self.motor_th.position)
 
         self.coordinate_generator.update(dt, self.rot)
-        coord = self.coordinate_generator.coord
-        dest  = self.coordinate_generator.dest_quat
-        euler = quat_to_euler(dest)
+        curr_quat = apply_rotation(np.quaternion(0, 1, 0, 0), self.rot)
+        dest_quat = self.coordinate_generator.dest_quat
+        curr = quat_to_euler(curr_quat)
+        dest = quat_to_euler(dest_quat)
+        print(curr, dest)
 
-        print(dest)
-        print(euler)
-
-        # TODO determine position setpoint (dphi, dth) by understanding geometry
-        # determine velocity setpoint using PID controller on position setpoint
-        # change this to depend on quaternion?
-        phi_pwr = 10000 * coord[0]
-        th_pwr  = 10000 * coord[1]
+        phi_pwr = 1 * shortest_rad(curr[0], dest[0])
+        th_pwr  = 1 * shortest_rad(curr[1], dest[1])
 
         self.motor_phi.set_velocity_setpoint(phi_pwr)
         self.motor_th .set_velocity_setpoint(th_pwr)

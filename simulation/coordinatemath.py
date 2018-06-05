@@ -1,19 +1,19 @@
 import numpy as np
 import quaternion
 
-class XY:
-    __slots__ = ['x', 'y']
-
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
 class Euler:
     __slots__ = ['phi', 'th']
 
     def __init__(self, phi, th):
         self.phi = phi
         self.th  = th
+
+class XY:
+    __slots__ = ['x', 'y']
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
 
 def apply_rotation(v, rot):
     return rot * v * rot.inverse()
@@ -54,8 +54,8 @@ def euler_to_quat(phi, th):
     """
     th_axis  = np.array([0., 1., 0.])
     phi_axis = np.array([0., 0., 1.])
-    th_quat  = axis_angle_to_quat(th_axis,  -th)
-    phi_quat = axis_angle_to_quat(phi_axis, -phi)
+    th_quat  = axis_angle_to_quat(th_axis,  th)
+    phi_quat = axis_angle_to_quat(phi_axis, phi)
     return phi_quat * th_quat
 
 # TODO write unit test converting to/from euler and check if it's identity
@@ -124,4 +124,12 @@ def quat_to_euler(q):
 def quats_to_plot_coords(q):
     arr = quaternion.as_float_array(q)
     return tuple(arr.T[1:])
+
+def shortest_rad(src, dest):
+    """Find shortest signed angle between dest and src."""
+    return (dest - src + np.pi) % (2 * np.pi) - np.pi
+
+def shortest_deg(src, dest):
+    """Find shortest signed angle between dest and src."""
+    return (dest - src + 180) % 360 - 180
 

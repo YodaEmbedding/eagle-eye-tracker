@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-import numpy as np
-
-from worldstate import WorldState
 import matplotlib.pyplot as plt
+import numpy as np
 
 from matplotlib.animation import FuncAnimation
 from mpl_toolkits import mplot3d
+
+from worldstate import WorldState
 
 np.set_printoptions(precision=3)
 

@@ -5,10 +5,12 @@ from coordinatemath import apply_rotation, quats_to_plot_coords
 
 class CoordinateGenerator:
     def __init__(self):
-        # self.coord = (1.0, 0.05)
-        self.coord = (1.0, 0.00)
+        # self.coord = (0.0, 1.0)  # TODO deal with case where we overshoot pole
+        self.coord = (1.0, 0.1)
         self.width  = 0.4
         self.height = 0.3
+
+        # TODO test modes other than just constant coordinate location...
 
     def draw(self, ax):
         ax.scatter3D(*quats_to_plot_coords([self._draw_quat]),
@@ -23,3 +25,4 @@ class CoordinateGenerator:
         return np.quaternion(0., 1.,
             -self.width  * self.coord[0],
              self.height * self.coord[1])
+
