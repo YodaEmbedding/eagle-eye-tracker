@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from draw_utils import draw_sphere, set_axes_radius
+from drawutils import draw_sphere, set_axes_radius
 from motioncontroller import MotionController
 
 class WorldState:
