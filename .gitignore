@@ -9,6 +9,9 @@ node_modules/
 *.bak
 *.sym
 
+# Sphinx
+_build/
+
 # Other
 research/
 *.swp
