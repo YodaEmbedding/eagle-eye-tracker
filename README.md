@@ -6,7 +6,7 @@ Group members: Mateen Ulhaq, Bud Yarrow, Arman Athwal, Naim Tejani, Victor Yun, 
 
 ![GUI](https://i.imgur.com/DR9QPH2.png)
 
-[![Simulation video](https://i.imgur.com/Cux8edj.png)](https://streamable.com/ai640)
+[![Simulation video](https://i.imgur.com/DKPieLw.jpg)](https://streamable.com/ai640)
 
 ## Installation
 
