@@ -6,6 +6,8 @@ from coordinatemath import *
 from motor import Motor
 
 class MotionController:
+    """Controls motors to move to desired position as fast as possible."""
+
     def __init__(self):
         self.coordinate_generator = CoordinateGenerator()
 
@@ -30,10 +32,10 @@ class MotionController:
         ])
 
     def draw(self, ax):
+        """Draw tracker camera."""
         ax.plot3D(*quats_to_plot_coords(self.rect_drawable), color='#55bbff')
         self.coordinate_generator.draw(ax)
 
-    # TODO time delays, inertia, etc?
     def update(self, dt):
         self.motor_phi.update(dt)
         self.motor_th .update(dt)
@@ -43,17 +45,25 @@ class MotionController:
             self.motor_th.position)
 
         self.coordinate_generator.update(dt, self.rot)
+
+        phi_vel, th_vel = self._get_next_velocity()
+        self.motor_phi.set_velocity_setpoint(phi_vel)
+        self.motor_th .set_velocity_setpoint(th_vel)
+
+        self.rect_drawable = apply_rotation(self._rect_drawable_orig, self.rot)
+
+    def _get_next_velocity(self):
+        """Determine next setpoint velocities of motors."""
+
         curr_quat = apply_rotation(np.quaternion(0, 1, 0, 0), self.rot)
         dest_quat = self.coordinate_generator.dest_quat
+
         curr = pos_quat_to_euler(curr_quat)
         dest = pos_quat_to_euler(dest_quat)
         print(curr, dest)
 
-        phi_pwr = 1 * shortest_rad(curr[0], dest[0])
-        th_pwr  = 1 * shortest_rad(curr[1], dest[1])
+        phi_vel = 1 * shortest_rad(curr[0], dest[0])
+        th_vel  = 1 * shortest_rad(curr[1], dest[1])
 
-        self.motor_phi.set_velocity_setpoint(phi_pwr)
-        self.motor_th .set_velocity_setpoint(th_pwr)
-
-        self.rect_drawable = apply_rotation(self._rect_drawable_orig, self.rot)
+        return phi_vel, th_vel
 

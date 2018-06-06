@@ -4,11 +4,15 @@ SFU Capstone Project (ENSC 405/440).
 
 Group members: Mateen Ulhaq, Bud Yarrow, Arman Athwal, Naim Tejani, Victor Yun, Martin Leung
 
+![GUI](https://i.imgur.com/DR9QPH2.png)
+
+[![Simulation video](https://i.imgur.com/Cux8edj.png)](https://streamable.com/ai640)
+
 ## Installation
 
 Install the following:
 
- - [Anaconda 3](https://www.anaconda.com/download/) (with opencv, numpy, pyzmq)
+ - [Anaconda 3](https://www.anaconda.com/download/) (with matplotlib, opencv, numpy, pyzmq)
  - [Python 2](https://www.python.org/downloads/) (with pyusb, pyzmq, nxt-python)
  - [BricxCC](http://bricxcc.sourceforge.net/test_releases/bricxcc_setup_33810_20130220.exe)
  - [BricxCC test release](http://bricxcc.sourceforge.net/test_releases/test_release20131007.zip) (overwrite your existing BricxCC installation with this)
@@ -46,21 +50,10 @@ Then simply run:
 
     npm start
 
-## TODO
+To run the simulation:
 
-Tracking:
-
- - Keep track of current position (using motor encoders)
- - Use Bud's formulas (e.g. dphi = dx / sin(curr.th); dth = dy + curr.th * sec(dphi) - ...)
- - Separate setpoint updating and PID motor control loop
- - RK4 prediction
- - PID motor control
- - Advanced control system
- - Deal with singularity at north pole (special case; unstable behavior; numerical stability)
-
-General:
-
- - Write right proper robust code
+    cd simulation
+    python simulation.py
 
 ## Formal Documents
 

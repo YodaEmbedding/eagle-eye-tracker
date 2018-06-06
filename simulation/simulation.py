@@ -30,11 +30,13 @@ animation = FuncAnimation(fig, update, 65536, interval=50, blit=False)
 plt.show()
 
 # TODO
-# Motor class: Velocity curves (with peak velocity), impedances
-# ControlSystem class
-# Pathing
-# Latency
 # Document sign, axis conventions
+# Graph error metric
+# CoordinateGenerator should simulate useful paths... (helices, random walks, etc)
+# PID controller
+# Pathing
+# Motor class: impedances/velocity-accel ramp curves
+# Model time delay/latency, inertia
 # machine learn control hyperparameters (differentiable programming or genetic)
 # bounds of motion
 # reversal of orientation
@@ -43,5 +45,4 @@ plt.show()
 # renormalize after rotations? (prevents drift from surface of sphere)
 # switch to plot.ly, Mayavi2, etc?
 # Conversion from xy to "quaternion" coming out from x axis
-# Graph error metric
 

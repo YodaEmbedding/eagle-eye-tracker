@@ -1,7 +1,8 @@
 import numpy as np
 
-# VirtualMotor... inherits from Motor?
 class Motor:
+    """Virtual motor object to simulate acceleration/inertia."""
+
     def __init__(self):
         self.position = 0.0
         self.velocity = 0.0
