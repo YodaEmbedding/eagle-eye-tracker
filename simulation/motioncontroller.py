@@ -45,8 +45,8 @@ class MotionController:
         self.coordinate_generator.update(dt, self.rot)
         curr_quat = apply_rotation(np.quaternion(0, 1, 0, 0), self.rot)
         dest_quat = self.coordinate_generator.dest_quat
-        curr = quat_to_euler(curr_quat)
-        dest = quat_to_euler(dest_quat)
+        curr = pos_quat_to_euler(curr_quat)
+        dest = pos_quat_to_euler(dest_quat)
         print(curr, dest)
 
         phi_pwr = 1 * shortest_rad(curr[0], dest[0])

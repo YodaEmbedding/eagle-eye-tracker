@@ -6,7 +6,7 @@ from coordinatemath import apply_rotation, quats_to_plot_coords
 class CoordinateGenerator:
     def __init__(self):
         # self.coord = (0.0, 1.0)  # TODO deal with case where we overshoot pole
-        self.coord = (1.0, 0.1)
+        self.coord = (1.0, 0.5)
         self.width  = 0.4
         self.height = 0.3
 

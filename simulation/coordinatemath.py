@@ -59,8 +59,10 @@ def euler_to_quat(phi, th):
     return phi_quat * th_quat
 
 # TODO write unit test converting to/from euler and check if it's identity
-def quat_to_euler(q):
-    """Convert unit quaternion to Euler angles.
+def pos_quat_to_euler(q):
+    """Convert position quaternion to Euler angles.
+
+    A position quaternion is of form (0, x, y, z).
 
     By project convention, the Euler angles are a composition of
     a rotation about the original x axis (roll),
@@ -69,11 +71,42 @@ def quat_to_euler(q):
     This is also known as x-y-z, consisting of extrinsic rotations.
 
     Args:
-        q (np.quaternion): Quaternion of unit norm.
+        q (np.quaternion): Position quaternion.
 
     Returns:
         np.ndarray: Euler angles in project convention.
     """
+
+    # x =  r * cos(th) * cos(phi)
+    # y =  r * cos(th) * sin(phi)
+    # z = -r * sin(th)
+
+    r   =  np.abs(q)
+    th  = -np.arcsin(q.z / r)
+    phi =  np.arctan2(q.y, q.x)
+
+    return np.array([phi, th])
+
+def rot_quat_to_euler(q):
+    """Convert rotation quaternion to Euler angles.
+
+    A rotation quaternion is applied to position quaternions to compute
+    rotations. This function accepts
+
+    By project convention, the Euler angles are a composition of
+    a rotation about the original x axis (roll),
+    a rotation about the original y axis (pitch), and
+    a rotation about the original z axis (yaw).
+    This is also known as x-y-z, consisting of extrinsic rotations.
+
+    Args:
+        q (np.quaternion): Rotation quaternion.
+
+    Returns:
+        np.ndarray: Euler angles in project convention.
+    """
+
+    raise NotImplemented
 
     # # yzy
     # # (phi, th, idk)
@@ -89,10 +122,10 @@ def quat_to_euler(q):
     #     np.arctan2(-q[..., 1], q[..., 3]))
     # return euler
 
-    w = q.w
-    x = q.x
-    y = q.y
-    z = q.z
+    # w = q.w
+    # x = q.x
+    # y = q.y
+    # z = q.z
 
     # ysqr = y * y
     #
@@ -111,25 +144,18 @@ def quat_to_euler(q):
     #
     # return np.degrees(np.array([X, Y, Z]))
 
-    # maybe just convert x,y,z to phi, th directly...
-    # x =  cos(th) * cos(phi)
-    # y =  cos(th) * sin(phi)
-    # z = -sin(th)
-
-    th  = -np.arcsin(z)
-    phi = np.arctan2(y, x)
-
-    return np.array([phi, th])
+    # Also consider implementation from:
+    # https://stackoverflow.com/a/27497022/365102
 
 def quats_to_plot_coords(q):
     arr = quaternion.as_float_array(q)
     return tuple(arr.T[1:])
 
-def shortest_rad(src, dest):
-    """Find shortest signed angle between dest and src."""
-    return (dest - src + np.pi) % (2 * np.pi) - np.pi
-
 def shortest_deg(src, dest):
     """Find shortest signed angle between dest and src."""
     return (dest - src + 180) % 360 - 180
+
+def shortest_rad(src, dest):
+    """Find shortest signed angle between dest and src."""
+    return (dest - src + np.pi) % (2 * np.pi) - np.pi
 
