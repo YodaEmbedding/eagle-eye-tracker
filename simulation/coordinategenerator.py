@@ -3,12 +3,13 @@ import quaternion
 
 from coordinatemath import apply_rotation, quats_to_plot_coords
 
+# TODO modify actual coordinate generator to send betwen [0,1] [0,1] for x, y
 class CoordinateGenerator:
     """Generates coordinates to simulate a moving object."""
 
     def __init__(self):
         # self.coord = (0.0, 1.0)  # TODO deal with case where we overshoot pole
-        self.coord = (1.0, 0.1)
+        self.coord = (1.0, 1.0)
         self.width  = 0.4
         self.height = 0.3
 
