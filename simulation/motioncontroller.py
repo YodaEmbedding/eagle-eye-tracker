@@ -14,7 +14,7 @@ class MotionController:
         self.motor_phi = Motor()
         self.motor_th  = Motor()
 
-        self.rot = euler_to_quat(
+        self.rot = euler_to_rot_quat(
             self.motor_phi.position,
             self.motor_th.position)
 
@@ -33,14 +33,15 @@ class MotionController:
 
     def draw(self, ax):
         """Draw tracker camera."""
-        ax.plot3D(*quats_to_plot_coords(self.rect_drawable), color='#55bbff')
+        ax.plot3D(*pos_quats_to_plot_coords(self.rect_drawable),
+            color='#55bbff')
         self.coordinate_generator.draw(ax)
 
     def update(self, dt):
         self.motor_phi.update(dt)
         self.motor_th .update(dt)
 
-        self.rot = euler_to_quat(
+        self.rot = euler_to_rot_quat(
             self.motor_phi.position,
             self.motor_th.position)
 

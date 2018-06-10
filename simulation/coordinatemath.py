@@ -36,8 +36,8 @@ def axis_angle_to_quat(axis, angle):
     q = np.concatenate(([np.cos(th)], np.sin(th) * axis))
     return quaternion.as_quat_array(q)
 
-def euler_to_quat(phi, th):
-    """Convert Euler angles to unit quaternion.
+def euler_to_pos_quat(phi, th):
+    """Convert Euler angles to position quaternion.
 
     By project convention, the Euler angles are a composition of
     a rotation about the original x axis (roll),
@@ -50,7 +50,25 @@ def euler_to_quat(phi, th):
         th (float): Second rotation about unrotated z axis (yaw).
 
     Returns:
-        np.quaternion: Quaterion.
+        np.quaternion: Position quaterion.
+    """
+    return rot_quat_to_pos_quat(euler_to_rot_quat(phi, th))
+
+def euler_to_rot_quat(phi, th):
+    """Convert Euler angles to rotation quaternion.
+
+    By project convention, the Euler angles are a composition of
+    a rotation about the original x axis (roll),
+    a rotation about the original y axis (pitch), and
+    a rotation about the original z axis (yaw).
+    This is also known as x-y-z, consisting of extrinsic rotations.
+
+    Args:
+        phi (float): First rotation about y axis (pitch).
+        th (float): Second rotation about unrotated z axis (yaw).
+
+    Returns:
+        np.quaternion: Rotation quaterion.
     """
     th_axis  = np.array([0., 1., 0.])
     phi_axis = np.array([0., 0., 1.])
@@ -147,7 +165,10 @@ def rot_quat_to_euler(q):
     # Also consider implementation from:
     # https://stackoverflow.com/a/27497022/365102
 
-def quats_to_plot_coords(q):
+def rot_quat_to_pos_quat(q):
+    return apply_rotation(np.quaternion(0, 1, 0, 0), q)
+
+def pos_quats_to_plot_coords(q):
     arr = quaternion.as_float_array(q)
     return tuple(arr.T[1:])
 
