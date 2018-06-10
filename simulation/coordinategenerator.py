@@ -66,17 +66,12 @@ class Path:
         self.path = path
         self.t = 0.0
 
-    # TODO consider SLERP, or other smooth quat interp methods
-    # Smooth paths on Reimannian manifolds... homotopies? Geodesics?
-    # Oh my gosh
     def get_next_pos_quat(self, dt):
         self.t += dt
-        phi, th = self._get_curr_euler()
-        return euler_to_pos_quat(phi, th)
+        return self.pos_quat
 
-    def _get_curr_euler(self):
-        """Returns a (phi, th) vector for the given time."""
-
+    @property
+    def pos_quat(self):
         n_rows = self.path.shape[0]
         idx = np.searchsorted(self.path[:, 0], self.t, side='right')
 
@@ -87,14 +82,19 @@ class Path:
         l = self.path[idx - 1]
         r = self.path[idx]
 
-        p_l = l[1:]
-        p_r = r[1:]
+        p_l = euler_to_pos_quat(*l[1:])
+        p_r = euler_to_pos_quat(*r[1:])
 
         t_l = l[0]
         t_r = r[0]
         t = (self.t - t_l) / (t_r - t_l)
 
-        # TODO what about wrapping of angles? around branches
-        # using euler angles is a terribad idea
-        return (p_r - p_l) * t + p_l
+        # TODO consider SQUAD
+        return quaternion.slerp_evaluate(p_l, p_r, t)
+
+    # def _slerp(p0, p1, t):
+    #     omega = np.arccos(np.dot(p0, p1))
+    #     return (
+    #         p0 * np.sin((1.0 - t) * omega) +
+    #         p1 * np.sin(t         * omega)) / np.sin(omega)
 

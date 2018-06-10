@@ -166,7 +166,7 @@ def rot_quat_to_euler(q):
     # https://stackoverflow.com/a/27497022/365102
 
 def rot_quat_to_pos_quat(q):
-    return apply_rotation(np.quaternion(0, 1, 0, 0), q)
+    return apply_rotation(quaternion.x, q)
 
 def pos_quats_to_plot_coords(q):
     arr = quaternion.as_float_array(q)
