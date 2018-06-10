@@ -7,8 +7,8 @@ class Motor:
         self.position = 0.0
         self.velocity = 0.0
         self.velocity_setpoint = 0.0
-        self.accel_max = 1.0
-        self.velocity_max = 0.5
+        self.accel_max = 1.5
+        self.velocity_max = 2.0
 
     def set_velocity_setpoint(self, velocity_setpoint):
         self.velocity_setpoint = velocity_setpoint

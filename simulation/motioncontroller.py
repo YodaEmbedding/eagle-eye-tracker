@@ -63,8 +63,10 @@ class MotionController:
         dest = pos_quat_to_euler(dest_quat)
         print(curr, dest)
 
-        phi_vel = 1 * shortest_rad(curr[0], dest[0])
-        th_vel  = 1 * shortest_rad(curr[1], dest[1])
+        # TODO PID (or other control algorithms)... or should that be handled closer to the motors?
+        # TODO Path planning
+        phi_vel = 4.0 * shortest_rad(curr[0], dest[0])
+        th_vel  = 4.0 * shortest_rad(curr[1], dest[1])
 
         return phi_vel, th_vel
 

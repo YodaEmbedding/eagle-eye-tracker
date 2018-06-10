@@ -28,7 +28,7 @@ class WorldState:
         set_axes_radius(ax, origin[0], 0.7)
 
     def draw_error(self, ax):
-        x = np.arange(255)
+        x = np.arange(len(self.error_history))
         y = np.array(self.error_history)
         ax.clear()
         ax.plot(x, y)

@@ -14,19 +14,34 @@ class CoordinateGenerator:
         self.width  = 0.4
         self.height = 0.3
 
-        self.path = Path(np.array([
-            #  t,  phi,   th
-            [0.0,  0.0,  0.0],
-            [1.0,  0.5, -0.5],
-            [2.0,  1.0, -1.0],
-            [3.0,  1.0, -1.5],
-            [4.0,  2.0, -1.5],
-            [5.0,  5.0, -1.3],
-            [6.0,  7.0, -1.2],
-            [7.0,  6.0, -1.1],
-            [8.0, -1.0, -1.0],
-            [9.0,  0.0, -0.3],
-        ]))
+        test_paths = [
+            Path(np.array([
+                #  t,  phi,   th
+                [0.0,  0.0,  0.0],
+                [1.0,  0.5, -0.2],
+                [2.0,  1.0, -0.5],
+                [3.0,  1.0, -0.7],
+                [4.0,  2.0, -0.8],
+                [5.0,  3.0, -0.6],
+                [6.0,  4.0, -0.4],
+                [7.0,  5.0, -0.2],
+                [8.0, -1.0, -0.1],
+                [9.0,  0.0,  0.0]])),
+            Path(np.array([
+                #  t,  phi,   th
+                [0.0,  0.0,  0.0],
+                [1.0,  0.5, -0.5],
+                [2.0,  1.0, -1.0],
+                [3.0,  1.0, -1.5],
+                [4.0,  2.0, -1.5],
+                [5.0,  5.0, -1.3],
+                [6.0,  7.0, -1.2],
+                [7.0,  6.0, -1.1],
+                [8.0, -1.0, -1.0],
+                [9.0,  0.0, -0.3]])),
+        ]
+
+        self.path = test_paths[0]
 
     def draw(self, ax):
         """Draw a coordinate at location in image frame."""
@@ -64,37 +79,41 @@ class Path:
 
     def __init__(self, path):
         self.path = path
+        self.path_quat = np.array([euler_to_pos_quat(*p) for p in path[:, 1:]])
+        self.path_t    = path[:, 0]
         self.t = 0.0
 
     def get_next_pos_quat(self, dt):
         self.t += dt
+        print(self.t)
         return self.pos_quat
 
     @property
     def pos_quat(self):
         n_rows = self.path.shape[0]
-        idx = np.searchsorted(self.path[:, 0], self.t, side='right')
+        idx = max(self.path_t.searchsorted(self.t, side='right'), 1)
 
         if idx >= n_rows:
-            self.t = -5.0
-            idx = 0
+            self.t = -5.
+            idx = 1
 
-        l = self.path[idx - 1]
-        r = self.path[idx]
+        q_l = self.path_quat[idx - 1]
+        q_r = self.path_quat[idx]
 
-        p_l = euler_to_pos_quat(*l[1:])
-        p_r = euler_to_pos_quat(*r[1:])
-
-        t_l = l[0]
-        t_r = r[0]
-        t = (self.t - t_l) / (t_r - t_l)
+        t_l = self.path_t[idx - 1]
+        t_r = self.path_t[idx]
+        t = (max(self.t, 0.) - t_l) / (t_r - t_l)
+        print(t, idx)
 
         # TODO consider SQUAD
-        return quaternion.slerp_evaluate(p_l, p_r, t)
-
-    # def _slerp(p0, p1, t):
-    #     omega = np.arccos(np.dot(p0, p1))
-    #     return (
-    #         p0 * np.sin((1.0 - t) * omega) +
-    #         p1 * np.sin(t         * omega)) / np.sin(omega)
+        # squad_evaluate
+        # return quaternion.squad(
+        #     self.path_quat[idx-1:idx+1],
+        #     self.path_t[idx-1:idx+1],
+        #     np.array([max(self.t, 0.)]))[0]
+        return quaternion.squad(
+            self.path_quat[idx-1:idx+1],
+            np.array([0., 1.]),
+            np.array([t]))[0]
+        # return quaternion.slerp_evaluate(q_l, q_r, t)
 
