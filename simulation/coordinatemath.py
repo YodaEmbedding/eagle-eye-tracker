@@ -70,11 +70,12 @@ def euler_to_rot_quat(phi, th):
     Returns:
         np.quaternion: Rotation quaterion.
     """
-    th_axis  = np.array([0., 1., 0.])
-    phi_axis = np.array([0., 0., 1.])
-    th_quat  = axis_angle_to_quat(th_axis,  th)
-    phi_quat = axis_angle_to_quat(phi_axis, phi)
-    return phi_quat * th_quat
+    return quaternion.from_spherical_coords(th, phi)
+    # th_axis  = np.array([0., 1., 0.])
+    # phi_axis = np.array([0., 0., 1.])
+    # th_quat  = axis_angle_to_quat(th_axis,  th)
+    # phi_quat = axis_angle_to_quat(phi_axis, phi)
+    # return phi_quat * th_quat
 
 # TODO write unit test converting to/from euler and check if it's identity
 def pos_quat_to_euler(q):
@@ -123,8 +124,7 @@ def rot_quat_to_euler(q):
     Returns:
         np.ndarray: Euler angles in project convention.
     """
-
-    raise NotImplemented
+    return tuple(reversed(q.as_spherical_coords()))
 
     # # yzy
     # # (phi, th, idk)

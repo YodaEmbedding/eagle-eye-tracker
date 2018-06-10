@@ -22,6 +22,7 @@ class WorldState:
         ax.margins(0, 0)
         ax.axis('off')
         ax.grid(False)
+        # ax.set_title('Simulation')
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         ax.set_zlabel('z')

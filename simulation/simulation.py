@@ -41,8 +41,8 @@ ani = FuncAnimation(fig, update, 65536, interval=50, blit=False)
 plt.show()
 
 # TODO
+# Doctest, Pytest
 # Document sign, axis conventions
-# CoordinateGenerator should simulate useful paths... (helices, random walks, etc)
 # PID controller
 # Pathing
 # Motor class: impedances/velocity-accel ramp curves
@@ -54,5 +54,4 @@ plt.show()
 # consider latency from camera->imageproc->coords too
 # renormalize after rotations? (prevents drift from surface of sphere)
 # switch to plot.ly, Mayavi2, etc?
-# Conversion from xy to "quaternion" coming out from x axis
 

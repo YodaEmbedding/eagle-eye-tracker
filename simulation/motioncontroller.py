@@ -63,8 +63,12 @@ class MotionController:
         dest = pos_quat_to_euler(dest_quat)
         print(curr, dest)
 
-        # TODO PID (or other control algorithms)... or should that be handled closer to the motors?
+        # TODO PID (control algo)... or should it be handled closer to motors?
         # TODO Path planning
+        # TODO Velocity-accel curve to estimate time required to get to point
+        #       - Cache its integral and use as lookup to estimate if we can get
+        #         to point without overshoot
+
         phi_vel = 4.0 * shortest_rad(curr[0], dest[0])
         th_vel  = 4.0 * shortest_rad(curr[1], dest[1])
 
