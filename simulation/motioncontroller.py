@@ -61,7 +61,7 @@ class MotionController:
 
         curr = pos_quat_to_euler(curr_quat)
         dest = pos_quat_to_euler(dest_quat)
-        print(curr, dest)
+        # print(curr, dest)
 
         # TODO PID (control algo)... or should it be handled closer to motors?
         # TODO Path planning

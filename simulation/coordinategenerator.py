@@ -85,7 +85,7 @@ class Path:
 
     def get_next_pos_quat(self, dt):
         self.t += dt
-        print(self.t)
+        print('CoordinateGenerator t: {:.2f}'.format(self.t))
         return self.pos_quat
 
     @property
@@ -104,12 +104,6 @@ class Path:
         t_r = self.path_t[idx]
         t = (max(self.t, 0.) - t_l) / (t_r - t_l)
 
-        # return quaternion.slerp_evaluate(q_l, q_r, tj
-        # TODO interp through bunch of these?
-        # return quaternion.squad(
-        #     self.path_quat[idx-1:idx+1],
-        #     np.array([0., 1.]),
-        #     np.array([t]))[0]
         return quaternion.squad(
             self.path_quat,
             self.path_t,
