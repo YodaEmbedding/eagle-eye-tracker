@@ -53,7 +53,7 @@ class CoordinateGenerator:
                 [9.0,  0.0, -0.3]])),
         ]
 
-        self.path = test_paths[0]
+        self.path = test_paths[1]
 
     def draw(self, ax):
         """Draw a coordinate at location in image frame."""

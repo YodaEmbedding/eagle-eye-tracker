@@ -94,6 +94,10 @@ class MotionController:
         phi_vel = self.motor_phi.recommend_velocity(dest[0])
         th_vel  = self.motor_th .recommend_velocity(dest[1])
 
+        # TODO use shortest_rad... provide deltas for destination?
+        # let motor figure out which position is closest to delta?
+        # motor.get_nearest_delta()
+
         # dt = 1 / 4.0
         # dt = t_total
         # phi_vel = shortest_rad(curr[0], dest[0]) / dt
