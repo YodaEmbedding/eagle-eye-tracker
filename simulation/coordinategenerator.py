@@ -19,18 +19,6 @@ class CoordinateGenerator:
                 #  t,  phi,   th
                 [0.0,  0.0,  0.0],
                 [1.0,  0.5, -0.2],
-                [2.0,  0.5, -0.2],
-                [3.0,  0.0,  0.0],
-                [4.0,  0.0,  0.0],
-                [5.0,  0.5, -0.2],
-                [6.0,  0.5, -0.2],
-                [7.0,  0.0,  0.0],
-                [8.0,  0.0,  0.0],
-                [9.0,  0.0,  0.0]])),
-            Path(np.array([
-                #  t,  phi,   th
-                [0.0,  0.0,  0.0],
-                [1.0,  0.5, -0.2],
                 [2.0,  1.0, -0.5],
                 [3.0,  1.0, -0.7],
                 [4.0,  2.0, -0.8],
@@ -38,7 +26,18 @@ class CoordinateGenerator:
                 [6.0,  4.0, -0.4],
                 [7.0,  5.0, -0.2],
                 [8.0, -1.0, -0.1],
-                [9.0,  0.0,  0.0]])),
+                [9.0,  0.0,  0.0],
+                #  t,  phi,   th
+                [10.0,  0.0,  0.0],
+                [11.0,  0.0,  0.0],
+                [12.0,  0.5, -0.2],
+                [13.0,  0.5, -0.2],
+                [14.0,  0.0,  0.0],
+                [15.0,  0.0,  0.0],
+                [16.0,  0.5, -0.2],
+                [17.0,  0.5, -0.2],
+                [18.0,  0.0,  0.0],
+                [19.0,  0.0,  0.0]])),
             Path(np.array([
                 #  t,  phi,   th
                 [0.0,  0.0,  0.0],
@@ -53,7 +52,7 @@ class CoordinateGenerator:
                 [9.0,  0.0, -0.3]])),
         ]
 
-        self.path = test_paths[1]
+        self.path = test_paths[0]
 
     def draw(self, ax):
         """Draw a coordinate at location in image frame."""
@@ -106,7 +105,7 @@ class Path:
         idx = max(self.path_t.searchsorted(self.t, side='right'), 1)
 
         if idx >= n_rows:
-            self.t = -5.
+            self.t = -1.
             idx = 1
 
         q_l = self.path_quat[idx - 1]
