@@ -106,6 +106,13 @@ def pos_quat_to_euler(q):
 
     return np.array([phi, th])
 
+def pos_quats_to_plot_coords(q):
+    arr = quaternion.as_float_array(q)
+    return tuple(arr.T[1:])
+
+def pos_quat_to_rot_quat(q):
+    return euler_to_rot_quat(*pos_quat_to_euler(q))
+
 def rot_quat_to_euler(q):
     """Convert rotation quaternion to Euler angles.
 
@@ -167,10 +174,6 @@ def rot_quat_to_euler(q):
 
 def rot_quat_to_pos_quat(q):
     return apply_rotation(quaternion.x, q)
-
-def pos_quats_to_plot_coords(q):
-    arr = quaternion.as_float_array(q)
-    return tuple(arr.T[1:])
 
 def shortest_deg(src, dest):
     """Find shortest signed angle between dest and src."""

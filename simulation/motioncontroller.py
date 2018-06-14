@@ -47,13 +47,13 @@ class MotionController:
 
         self.coordinate_generator.update(dt, self.rot)
 
-        phi_vel, th_vel = self._get_next_velocity()
+        phi_vel, th_vel = self._get_next_velocity(dt)
         self.motor_phi.set_velocity_setpoint(phi_vel)
         self.motor_th .set_velocity_setpoint(th_vel)
 
         self.rect_drawable = apply_rotation(self._rect_drawable_orig, self.rot)
 
-    def _get_next_velocity(self):
+    def _get_next_velocity(self, dt):
         """Determine next setpoint velocities of motors."""
 
         curr_quat = apply_rotation(np.quaternion(0, 1, 0, 0), self.rot)
@@ -69,8 +69,38 @@ class MotionController:
         #       - Cache its integral and use as lookup to estimate if we can get
         #         to point without overshoot
 
-        phi_vel = 4.0 * shortest_rad(curr[0], dest[0])
-        th_vel  = 4.0 * shortest_rad(curr[1], dest[1])
+        # TODO should these be position or rotation quats...?
+        # dist = quaternion.rotation_intrinsic_distance(curr_quat, dest_quat)
+        # t_total = dist / (Motor.VEL_MAX / 2)
+        # dq = quaternion.slerp_evaluate(curr_quat, dest_quat, dt / t_total)
+        # dest = pos_quat_to_euler(dq)
+
+        # TODO OK next step:
+        # Figure out how to deal with motor inertia
+        # So...
+        # integrate?
+        # cap the movement speed using this?
+        # dist in e.g. phi direction?
+
+        dist_phi = np.abs(dest[0] - curr[0])
+        dist_th  = np.abs(dest[1] - curr[1])
+
+        # less than? shouldn't this be a calculation, not some weird condition
+        # maybe with a max/min or whatever()
+        # if dist_phi <
+
+        # seems like (linear?) optimization problem...?
+        # "find maximum velocity given dist" #, v_init"
+        phi_vel = self.motor_phi.recommend_velocity(dest[0])
+        th_vel  = self.motor_th .recommend_velocity(dest[1])
+
+        # dt = 1 / 4.0
+        # dt = t_total
+        # phi_vel = shortest_rad(curr[0], dest[0]) / dt
+        # th_vel  = shortest_rad(curr[1], dest[1]) / dt
+
+        # TODO why is this always 0.05 (which is dt)? neat, I guess
+        # print(quaternion.rotation_intrinsic_distance(curr_quat, dq))
 
         return phi_vel, th_vel
 
