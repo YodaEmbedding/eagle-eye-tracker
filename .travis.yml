@@ -3,9 +3,6 @@ language: python
 python:
   - "3.6"
 
-script:
-  - pytest test/
-
 install:
   - sudo apt-get update
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
@@ -19,3 +16,10 @@ install:
   - source activate test-environment
   - python setup.py install
 
+before_script:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+  - sleep 3  # give xvfb some time to start
+
+script:
+  - pytest test/
