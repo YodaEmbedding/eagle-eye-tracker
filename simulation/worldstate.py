@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy_ringbuffer import RingBuffer
 
-from drawutils import draw_sphere, set_axes_radius
-from motioncontroller import MotionController
+from .drawutils import draw_sphere, set_axes_radius
+from .motioncontroller import MotionController
 
 class WorldState:
     def __init__(self):
@@ -19,7 +19,7 @@ class WorldState:
         draw_sphere(ax, 8, 16, color="#222222")
         self.motion_controller.draw(ax)
 
-        ax.margins(0, 0)
+        ax.margins(x=0, y=0)
         ax.axis('off')
         ax.grid(False)
         # ax.set_title('Simulation')

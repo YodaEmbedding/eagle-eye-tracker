@@ -1,9 +1,9 @@
 import numpy as np
 import quaternion
 
-from coordinategenerator import CoordinateGenerator
-from coordinatemath import *
-from motor import Motor
+from .coordinategenerator import CoordinateGenerator
+from .coordinatemath import *
+from .motor import Motor
 
 class MotionController:
     """Controls motors to move to desired position as fast as possible."""
@@ -30,6 +30,7 @@ class MotionController:
             np.quaternion(0, 1, -w,  h),  # B
             np.quaternion(0, 1,  w, -h),  # D
         ])
+        self.rect_drawable = apply_rotation(self._rect_drawable_orig, self.rot)
 
     def draw(self, ax):
         """Draw tracker camera."""

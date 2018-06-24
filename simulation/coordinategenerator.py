@@ -1,7 +1,7 @@
 import numpy as np
 import quaternion
 
-from coordinatemath import (apply_rotation, euler_to_pos_quat,
+from .coordinatemath import (apply_rotation, euler_to_pos_quat,
     pos_quats_to_plot_coords)
 
 # TODO modify actual coordinate generator to send betwen [0,1] [0,1] for x, y
@@ -96,7 +96,7 @@ class Path:
 
     def get_next_pos_quat(self, dt):
         self.t += dt
-        print('CoordinateGenerator t: {:.2f}'.format(self.t))
+        # print('CoordinateGenerator t: {:.2f}'.format(self.t))
         return self.pos_quat
 
     @property

@@ -1,6 +1,6 @@
 import numpy as np
 
-from coordinatemath import shortest_rad
+from .coordinatemath import shortest_rad
 
 class Motor:
     """Virtual motor object to simulate acceleration/inertia."""
