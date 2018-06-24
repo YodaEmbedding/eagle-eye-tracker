@@ -1,3 +1,6 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://travis-ci.com/SicariusNoctis/eagle-eye-tracker.svg?branch=master)](https://travis-ci.com/SicariusNoctis/eagle-eye-tracker)
+
 ## Eagle Eye Tracker
 
 SFU Capstone Project (ENSC 405/440).
@@ -33,27 +36,29 @@ Finally, be sure to upload the [NBC/NXC Enhanced Firmware](http://bricxcc.source
 
 ## Usage
 
-Compile, download, and run the program on the NXT:
+Compile, download, and run the program on the NXT; then run the Python script:
 
     nbc -EF -S=usb -d -r nxt.nxc
+    python3 eagleeyetracker.py
 
-Now simply:
-
-    python eagleeyetracker.py
-
-To run the GUI, first ensure that Electron is present:
+To run the GUI, first ensure that Electron is present, then `npm start`:
 
     cd gui
     npm install --save-dev electron
-
-Then simply run:
-
     npm start
 
 To run the simulation:
 
-    cd simulation
-    python simulation.py
+    python3 simulation.py
+
+To run tests:
+
+    make test
+
+To build and view documentation:
+
+    make doc
+    firefox doc/_build/html/index.html
 
 ## Formal Documents
 
