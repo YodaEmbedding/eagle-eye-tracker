@@ -24,6 +24,11 @@ Install the following:
  - Node Package Manager (npm)
  - Electron
 
+To install Electron:
+
+    cd gui
+    npm install --save-dev electron
+
 Set your `PATH` environment variable to include the following paths:
 
     Anaconda 3 installation directory
@@ -36,20 +41,17 @@ Finally, be sure to upload the [NBC/NXC Enhanced Firmware](http://bricxcc.source
 
 ## Usage
 
-Compile, download, and run the program on the NXT; then run the Python script:
+To compile, download, run the program on the NXT; and run the Python script:
 
-    nbc -EF -S=usb -d -r nxt.nxc
-    python3 eagleeyetracker.py
+    make run_nxt
 
-To run the GUI, first ensure that Electron is present, then `npm start`:
+To run the GUI:
 
-    cd gui
-    npm install --save-dev electron
-    npm start
+    make run_gui
 
 To run the simulation:
 
-    python3 simulation.py
+    make run_sim
 
 To run tests:
 
@@ -57,8 +59,7 @@ To run tests:
 
 To build and view documentation:
 
-    make doc
-    firefox doc/_build/html/index.html
+    make doc_run
 
 ## Formal Documents
 
