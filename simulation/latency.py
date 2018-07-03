@@ -21,22 +21,3 @@ class Latency:
         while len(self.buffer) > 1 and self.buffer[1][0] < expiration:
             self.buffer.popleft()
 
-# Decorator?
-# setter, property?
-# __setattr__? __call__ etc?
-
-# Usage
-
-# class Motor:
-#     self.position = Latency(0.002)
-#     # motor.position = Latency(motor.position)
-#
-# motor = Motor()
-#
-#
-# motor.position = 420   # record time as well
-# print(motor.position)  # delayed response
-#
-#
-# # TODO consider... property()?
-#

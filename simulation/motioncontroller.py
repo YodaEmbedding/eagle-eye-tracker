@@ -62,7 +62,16 @@ class MotionController:
 
         curr = pos_quat_to_euler(curr_quat)
         dest = pos_quat_to_euler(dest_quat)
-        # print(curr, dest)
+
+        dist_phi = np.abs(dest[0] - curr[0])
+        dist_th  = np.abs(dest[1] - curr[1])
+
+        phi_vel = self.motor_phi.recommend_velocity(dest[0])
+        th_vel  = self.motor_th .recommend_velocity(dest[1])
+
+        return phi_vel, th_vel
+
+        # TODO velocity prediction of SETPOINT in future
 
         # TODO PID (control algo)... or should it be handled closer to motors?
         # TODO Path planning
@@ -76,24 +85,12 @@ class MotionController:
         # dq = quaternion.slerp_evaluate(curr_quat, dest_quat, dt / t_total)
         # dest = pos_quat_to_euler(dq)
 
-        # TODO OK next step:
-        # Figure out how to deal with motor inertia
-        # So...
-        # integrate?
-        # cap the movement speed using this?
-        # dist in e.g. phi direction?
-
-        dist_phi = np.abs(dest[0] - curr[0])
-        dist_th  = np.abs(dest[1] - curr[1])
-
         # less than? shouldn't this be a calculation, not some weird condition
         # maybe with a max/min or whatever()
         # if dist_phi <
 
         # seems like (linear?) optimization problem...?
         # "find maximum velocity given dist" #, v_init"
-        phi_vel = self.motor_phi.recommend_velocity(dest[0])
-        th_vel  = self.motor_th .recommend_velocity(dest[1])
 
         # TODO use shortest_rad... provide deltas for destination?
         # let motor figure out which position is closest to delta?
@@ -106,6 +103,4 @@ class MotionController:
 
         # TODO why is this always 0.05 (which is dt)? neat, I guess
         # print(quaternion.rotation_intrinsic_distance(curr_quat, dq))
-
-        return phi_vel, th_vel
 
