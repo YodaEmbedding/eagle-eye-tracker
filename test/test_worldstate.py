@@ -8,19 +8,25 @@ from simulation.worldstate import WorldState
 np.set_printoptions(precision=3)
 plt.style.use('dark_background')
 
+# TODO use same boilerplate but for different paths to test different paths
+# and characteristics such as oscillatory behavior
 def test_worldstate():
     state = WorldState()
     for _ in range(state.error_history.shape[0]):
         state.update()
 
+    hist = state.error_history
+    hist_max  = np.max(hist)
+    hist_mean = np.mean(hist)
+    hist_std  = np.std(hist)
+
     fig, ax = plt.subplots()
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1, wspace=0, hspace=0)
     state.draw_error(ax)
-    fig.savefig('test.png')
+    fig.savefig('log/test_worldstate_{:.3f}_{:.3f}_{:.3f}.png'.format(
+        hist_max, hist_mean, hist_std))
 
-    mean = np.mean(state.error_history)
-    std = np.std(state.error_history)
-
-    print(mean, std)
-    assert mean < 0.4 and std < 0.3
+    assert hist_max  < 0.9
+    assert hist_mean < 0.4
+    assert hist_std  < 0.3
 

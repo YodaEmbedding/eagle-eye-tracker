@@ -16,6 +16,7 @@ modules.rst
 simulation.rst
 
 # Other
+log/
 research/
 *.swp
 tags

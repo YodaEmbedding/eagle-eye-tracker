@@ -23,5 +23,6 @@ run_sim:
 	python3 simulation.py
 
 test:
+	mkdir -p log/
 	pytest test/
 
