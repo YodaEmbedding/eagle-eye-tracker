@@ -70,9 +70,6 @@ class MotionController:
     def _get_next_velocity(self, dt):
         """Determine next setpoint velocities of motors."""
 
-        # predict better dest, velocity at dest
-        # need to keep track of current velocity too...
-        # dest_quat, dest_quat_vel = self._predict_state()
         self._predict_state()
 
         curr = pos_quat_to_euler(self.curr_quat)
@@ -84,49 +81,16 @@ class MotionController:
 
         return phi_vel, th_vel
 
-        # TODO use this to interpolate between dest_quat and dest_predict_quat...!
-        # TODO should these be position or rotation quats...?
-        # dist = quaternion.rotation_intrinsic_distance(curr_quat, dest_quat)
-        # t_total = dist / (Motor.VEL_MAX / 2)
-        # dq = quaternion.slerp_evaluate(curr_quat, dest_quat, dt / t_total)
-        # dest = pos_quat_to_euler(dq)
-
         # TODO PID (control algo)... or should it be handled closer to motors?
         # TODO Path planning
         # TODO Velocity-accel curve to estimate time required to get to point
         #       - Cache its integral and use as lookup to estimate if we can get
         #         to point without overshoot
 
-        # less than? shouldn't this be a calculation, not some weird condition
-        # maybe with a max/min or whatever()
-        # if dist_phi <
-
-        # seems like (linear?) optimization problem...?
-        # "find maximum velocity given dist" #, v_init"
-
-        # TODO use shortest_rad... provide deltas for destination?
-        # let motor figure out which position is closest to delta?
-        # motor.get_nearest_delta()
-
-        # dt = 1 / 4.0
-        # dt = t_total
-        # phi_vel = shortest_rad(curr[0], dest[0]) / dt
-        # th_vel  = shortest_rad(curr[1], dest[1]) / dt
-
-        # TODO why is this always 0.05 (which is dt)? neat, I guess
-        # print(quaternion.rotation_intrinsic_distance(curr_quat, dq))
-
     def _predict_state(self):
-        # self.dest_quat_predict = self.dest_quat
-
         self.dest_quat_predict = extrapolate_quat(
             self.prev_dest_quat, self.dest_quat, 4.0)
 
-        # slerp(prev_dest_quat, dest_quat)
+        # TODO dest_quat_vel
 
-        # TODO use some sort of velocity through SLERP... make a separate function to estimate this?
-
-    # TODO
-    # @staticmethod
-    # def _slerp_time(q1, q2, ???):
 

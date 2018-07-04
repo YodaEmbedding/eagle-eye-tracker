@@ -81,10 +81,6 @@ def extrapolate_quat(q1, q2, t):
     rot = q2 * q1.inverse()
     return rot**t * q1
 
-    # rot = q2 * q1.inv()
-    # axis, angle = rot.to_axis_angle()
-    # return quaternion.from_axis_angle(axis, angle * t)
-
 # TODO write unit test converting to/from euler and check if it's identity
 def pos_quat_to_euler(q):
     """Convert position quaternion to Euler angles.

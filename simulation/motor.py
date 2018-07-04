@@ -1,9 +1,12 @@
 import numpy as np
 
 from .coordinatemath import shortest_rad
+from .latency import Latency
 
 class Motor:
     """Virtual motor object to simulate acceleration/inertia."""
+
+    # position = Latency(0.01)
 
     def __init__(self, velocity_max, accel_max):
         self.position = 0.0
