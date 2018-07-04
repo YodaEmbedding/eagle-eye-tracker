@@ -18,11 +18,6 @@ class MotionController:
             self.motor_phi.position,
             self.motor_th.position)
 
-        r = self.curr_rot
-        self.prev_rot = r
-        self.prev_dest_rot = r
-        self.dest_rot = r
-
         # TODO we really need to come up with a better convention for "position"
         # vs "rotation" quaternion...
         q = rot_quat_to_pos_quat(self.curr_rot)
@@ -55,20 +50,16 @@ class MotionController:
         self.motor_phi.update(dt)
         self.motor_th .update(dt)
 
-        self.prev_rot = self.curr_rot
         self.curr_rot = euler_to_rot_quat(
             self.motor_phi.position,
             self.motor_th .position)
 
         self.coordinate_generator.update(dt, self.curr_rot)
 
-        self.prev_dest_rot = self.dest_rot
-        self.dest_rot = pos_quat_to_rot_quat(self.coordinate_generator.dest_quat)
-
         self.prev_quat = self.curr_quat
         self.curr_quat = rot_quat_to_pos_quat(self.curr_rot)
         self.prev_dest_quat = self.dest_quat
-        self.dest_quat = rot_quat_to_pos_quat(self.dest_rot)
+        self.dest_quat = self.coordinate_generator.dest_quat
 
         phi_vel, th_vel = self._get_next_velocity(dt)
         self.motor_phi.set_velocity_setpoint(phi_vel)
@@ -130,9 +121,6 @@ class MotionController:
 
         self.dest_quat_predict = extrapolate_quat(
             self.prev_dest_quat, self.dest_quat, 4.0)
-
-        # self.dest_quat_predict = rot_quat_to_pos_quat(extrapolate_quat(
-        #     self.prev_dest_rot, self.dest_rot, 2.0))
 
         # slerp(prev_dest_quat, dest_quat)
 
