@@ -5,15 +5,12 @@ from .coordinatemath import shortest_rad
 class Motor:
     """Virtual motor object to simulate acceleration/inertia."""
 
-    VEL_MAX = 3.0
-    ACCEL_MAX = 1.5
-
-    def __init__(self):
+    def __init__(self, velocity_max, accel_max):
         self.position = 0.0
         self.velocity = 0.0
         self.velocity_setpoint = 0.0
-        self.accel_max = Motor.ACCEL_MAX
-        self.velocity_max = Motor.VEL_MAX
+        self.accel_max    = accel_max
+        self.velocity_max = velocity_max
 
     def get_stop_distance(self):
         return np.sign(self.velocity) * 0.5 * self.velocity**2 / self.accel_max
