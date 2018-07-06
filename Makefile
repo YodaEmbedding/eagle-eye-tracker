@@ -17,7 +17,7 @@ run_gui:
 run_nxt:
 	make -C nxt run
 	sleep 1
-	python3 eagleeyetracker.py
+	python3 eagleeyetracker_nxt.py
 
 run_sim:
 	python3 simulation.py
