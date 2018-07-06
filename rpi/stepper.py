@@ -18,11 +18,12 @@ class Stepper:
         self.dir_pin = dir_pin
         self.step_pin = step_pin
 
-        self.curr_pos = 0  # in steps
-        self.target_pos = 0
-        self.speed = 0.0  # in steps per sec
-        self.speed_setpoint = 1.0
+        # All in terms of steps
+        self.curr_pos = 0
+        self.velocity = 0.0
+        self.velocity_setpoint = 1.0
         self.acceleration = 1.0
+
         self.step_interval = 0.0  # delay between steps
         self.last_step_time = 0.0
         self.dir = Stepper.DIRECTION_CW
@@ -31,29 +32,48 @@ class Stepper:
         self.n = 0  # step counter. Positive is accelerating, negative is deaccelerating.
         self.c_0 = 0.0  # initial timer comparison value in microseconds
         self.c_n = 0.0  # timer value for the nth step
-        self.c_min = 1.0  # timer value at max speed
+        self.c_min = 1.0  # timer value at max velocity
 
         self.pi.set_mode(self.step_pin, pigpio.OUTPUT)
         self.pi.set_mode(self.dir_pin, pigpio.OUTPUT)
         self.pi.set_mode(self.ena_pin, pigpio.OUTPUT)
         self.pi.write(self.ena_pin, 0)  # Enable is active low.
 
-    # Sets the target absolute position in steps.
-    def move_to(self, absolute):
-        if self.target_pos != absolute:
-            self.target_pos = absolute
-            self._compute_new_speed()
-
-    def get_current_position(self):
-        return self.curr_pos
-
     # Polling function that runs at most one step per call, none if step interval has not been reached.
     def run(self):
-        if self.run_speed():
-            self._compute_new_speed()
-        return self.speed != 0.0 or self.get_distance_to_go() != 0
+        if self._run_velocity():
+            self._compute_new_velocity()
+        return self.velocity != 0.0
 
-    def run_speed(self):
+    def set_velocity_setpoint(self, velocity):
+        # TODO: lock = acquire_lock()
+
+        if self.velocity_setpoint == velocity:
+            return
+        # TODO: Deaccelerate before changing direction
+        if velocity < 0.0:
+            self.velocity_setpoint = -velocity
+            self.dir = Stepper.DIRECTION_CCW
+        else:
+            self.velocity_setpoint = velocity
+            self.dir = Stepper.DIRECTION_CW
+
+        self.c_min = 1000000.0 / self.velocity_setpoint
+        if (self.velocity_setpoint < self.velocity and self.n > 0) or \
+                (self.velocity_setpoint > self.velocity and self.n < 0):
+            self.n = -self.n
+            self._compute_new_velocity()
+        # lock.release()
+
+    def set_acceleration(self, acceleration):
+        if self.acceleration == acceleration:
+            return
+        self.n = self.n * (self.acceleration / acceleration)  # Equation 17
+        self.c_0 = 0.676 * math.sqrt(2.0 / acceleration) * 1000000.0  # Equation 15
+        self.acceleration = acceleration
+        self._compute_new_velocity()
+
+    def _run_velocity(self):
         if self.step_interval == 0.0:
             return False
 
@@ -71,98 +91,71 @@ class Stepper:
         else:
             return False
 
-    def get_distance_to_go(self):
-        return self.target_pos - self.curr_pos
-
-    def set_speed_setpoint(self, speed):
-        if self.speed_setpoint != speed:
-            self.speed_setpoint = speed
-            self.c_min = 1000000.0 / speed
-            if self.n > 0:
-                self.n = int((speed * speed) / (2.0 * self.acceleration))
-                self._compute_new_speed()
-
-    def set_acceleration(self, acceleration):
-        if self.acceleration != acceleration:
-            self.n = self.n * (self.acceleration / acceleration)  # Equation 17
-            self.c_0 = 0.676 * math.sqrt(2.0 / acceleration) * 1000000.0  # Equation 15
-            self.acceleration = acceleration
-            self._compute_new_speed()
-
-    # Computes new speed after each step, or changes to speed setpoint, acceleration, target position
-    def _compute_new_speed(self):
-        distance_to = self.get_distance_to_go()
-        steps_to_stop = int((self.speed * self.speed) / (2.0 * self.acceleration))
-
-        # Target reached, stop.
-        if distance_to == 0 and steps_to_stop <= 1:
-            self.step_interval = 0
-            self.speed = 0.0
-            self.n = 0
-            return
-
-        # Currently anticlockwise from target; go clockwise.
-        if distance_to > 0:
-            if self.n > 0:
-                if steps_to_stop >= distance_to or self.dir == Stepper.DIRECTION_CCW:
-                    self.n = -steps_to_stop
-            elif self.n < 0:
-                if steps_to_stop < distance_to and self.dir == Stepper.DIRECTION_CW:
-                    self.n = -self.n
-
-        # Currently clockwise from target; go anticlockwise.
-        elif distance_to < 0:
-            if self.n > 0:
-                if steps_to_stop >= -distance_to or self.dir == Stepper.DIRECTION_CW:
-                    self.n = -steps_to_stop
-            elif self.n < 0:
-                if steps_to_stop < -distance_to and self.dir == Stepper.DIRECTION_CCW:
-                    self.n = -self.n
-
+    # Computes new velocity after each step, or changes to velocity setpoint, acceleration
+    def _compute_new_velocity(self):
         # First step
-        if self.n == 0:
+        if self.n == 0 and self.velocity != self.velocity_setpoint:
             self.c_n = self.c_0
-            self.dir = Stepper.DIRECTION_CW if distance_to > 0 else Stepper.DIRECTION_CCW
         else:
             self.c_n = self.c_n - ((2.0 * self.c_n) / ((4.0 * self.n) + 1))  # Equation 13
-            self.c_n = max(self.c_n, self.c_min)
+
+            if self.n > 0:
+                self.c_n = max(self.c_n, self.c_min)
+            else:
+                self.c_n = min(self.c_n, self.c_min)
 
         self.n += 1
         self.step_interval = self.c_n
-        self.speed = 1000000.0 / self.c_n
+        self.velocity = 1000000.0 / self.c_n
 
-        # print("Speed: " + str(self.speed))
+        # print("velocity: " + str(self.velocity))
         # print("Acceleration: " + str(self.acceleration))
         # print("c_n: " + str(self.c_n))
         # print("c_0: " + str(self.c_0))
+        # print("c_min " + str(self.c_min))
         # print("n: " + str(self.n))
         # print("Step Interval: " + str(self.step_interval))
-        # print("Target Position: " + str(self.target_pos))
         # print("Current Position: " + str(self.curr_pos))
-        # print("Distance To: " + str(distance_to))
-        # print("Steps To Stop: " + str(steps_to_stop))
         # print("-------------------------------")
 
     # Performs a step with pulse of minimal width.
     def _step(self):
         self.pi.write(self.dir_pin, self.dir)
-        self.pi.gpio_trigger(self.step_pin, 10, 1)
+        self.pi.gpio_trigger(self.step_pin, 20, 1)
 
 
 pi = pigpio.pi()
 if not pi.connected:
     exit()
 try:
+    # TODO: Drive two motors simulataneously.
+    # Also look into negative velocity bug?
+    #   stepper.set_velocity_setpoint(-1000)
+    #   stepper.set_acceleration(500)
     stepper = Stepper(pi, 16, 20, 21)
-    stepper.set_speed_setpoint(5000)
+    stepper.set_velocity_setpoint(4000)
     stepper.set_acceleration(500)
-    stepper.move_to(25000)
-    while True:
-        if stepper.get_distance_to_go() == 0:
-            stepper.move_to(-stepper.get_current_position())
+    state = 0
 
+    while True:
+        if state == 0 and stepper.velocity > 3000:
+            print (" down ")
+            stepper.set_velocity_setpoint(1000)
+            state = 1
+        if state == 1 and stepper.velocity == 1000:
+            print (" up ")
+            stepper.set_velocity_setpoint(2000)
+            state = 2
+        if state == 2 and stepper.velocity == 2000:
+            print(" ccw ")
+            stepper.set_velocity_setpoint(-1000)
+            state = 3
+        if state == 3 and stepper.velocity == 1000:
+            print(" cw ")
+            stepper.set_velocity_setpoint(4000)
+            state = 4
         stepper.run()
 
 except KeyboardInterrupt:
     print("\nExiting...")
-    pi.stop()
+    pi.stop() # TODO: Switch ENA back to high
