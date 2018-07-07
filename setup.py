@@ -15,7 +15,7 @@ setup(
     packages=['simulation', 'test', 'doc'],
     long_description=read('README.md'),
     install_requires=[
-        # 'numpy-quaternion',
+        'numpy-quaternion',
         'numpy_ringbuffer',
     ],
 )
