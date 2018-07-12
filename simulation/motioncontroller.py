@@ -3,16 +3,14 @@ import quaternion
 
 from .coordinategenerator import CoordinateGenerator
 from .coordinatemath import *
-from .motor import Motor
 
 class MotionController:
     """Controls motors to move to desired position as fast as possible."""
 
-    def __init__(self):
-        self.coordinate_generator = CoordinateGenerator()
-
-        self.motor_phi = Motor(velocity_max=3.0, accel_max=1.5)
-        self.motor_th  = Motor(velocity_max=3.0, accel_max=1.5)
+    def __init__(self, coordinate_generator, motor_phi, motor_th):
+        self.coordinate_generator = coordinate_generator
+        self.motor_phi = motor_phi
+        self.motor_th  = motor_th
 
         self.curr_rot = euler_to_rot_quat(
             self.motor_phi.position,
@@ -38,7 +36,8 @@ class MotionController:
             np.quaternion(0, 1, -w,  h),  # B
             np.quaternion(0, 1,  w, -h),  # D
         ])
-        self.rect_drawable = apply_rotation(self._rect_drawable_orig, self.curr_rot)
+        self.rect_drawable = apply_rotation(self._rect_drawable_orig,
+            self.curr_rot)
 
     def draw(self, ax):
         """Draw tracker camera."""
@@ -65,7 +64,8 @@ class MotionController:
         self.motor_phi.set_velocity_setpoint(phi_vel)
         self.motor_th .set_velocity_setpoint(th_vel)
 
-        self.rect_drawable = apply_rotation(self._rect_drawable_orig, self.curr_rot)
+        self.rect_drawable = apply_rotation(self._rect_drawable_orig,
+            self.curr_rot)
 
     def _get_next_velocity(self, dt):
         """Determine next setpoint velocities of motors."""
@@ -92,5 +92,4 @@ class MotionController:
             self.prev_dest_quat, self.dest_quat, 4.0)
 
         # TODO dest_quat_vel
-
 

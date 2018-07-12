@@ -2,12 +2,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy_ringbuffer import RingBuffer
 
+from .coordinategenerator import CoordinateGenerator
 from .drawutils import draw_sphere, set_axes_radius
 from .motioncontroller import MotionController
+from .motor import Motor
 
 class WorldState:
     def __init__(self):
-        self.motion_controller = MotionController()
+        coordinate_generator = CoordinateGenerator()
+        motor_phi = Motor(velocity_max=3.0, accel_max=1.5)
+        motor_th  = Motor(velocity_max=3.0, accel_max=1.5)
+
+        self.motion_controller = MotionController(coordinate_generator,
+            motor_phi, motor_th)
         self.error_history = RingBuffer(capacity=255, dtype=np.float32)
         self.error_history.extend(np.zeros(255))
 
