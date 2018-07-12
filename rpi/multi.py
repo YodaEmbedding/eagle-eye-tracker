@@ -30,7 +30,7 @@ def run_motor_func(stepper):
             # TODO it's OK to call set_velocity_setpoint probably...
             if queue_in.empty():
                 continue
-            while not queue_in.empty()
+            while not queue_in.empty():
                 vel_setpoint = queue_in.get()
             stepper.set_velocity_setpoint(vel_setpoint)
     return run_motor
@@ -61,7 +61,7 @@ if __name__ == '__main__':
         stepper_comms = [StepperComm() for x in range(2)]
 
         processes = [Process(target=run_motor_func(s), args=sc.get_args())
-            for s, sc in zip(steppers, stepper_comms))]
+            for s, sc in zip(steppers, stepper_comms)]
 
         for p in processes:
             p.start()
