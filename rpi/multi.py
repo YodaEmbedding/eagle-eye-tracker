@@ -1,16 +1,13 @@
 from multiprocessing import Process, Pipe, Queue
-from functools import partial
 import pigpio
 import time
 
 from stepper import Stepper
+from steppercomm import StepperComm
 
 pi = pigpio.pi()
 if not pi.connected:
     exit()
-
-# TODO upload
-# TODO get working with main tracker code
 
 steppers = [
     Stepper(pi, 16, 20, 21),
@@ -35,30 +32,9 @@ def run_motor_func(stepper):
             stepper.set_velocity_setpoint(vel_setpoint)
     return run_motor
 
-# TODO insert process too? or is that stupid
-class StepperComm:
-    def __init__(self):
-        self.queue_in  = Queue()
-        self.queue_out = Queue()
-
-        self.position = 0.0
-        self.velocity = 0.0
-
-    def get_args(self):
-        return self.queue_out, self.queue_in
-
-    def run(self):
-        # TODO this is stupid
-        # Clear queue
-        while not self.queue_in.empty():
-            self.position, self.velocity = self.queue_in.get()
-
-    def set_velocity_setpoint(self, setpoint):
-        self.queue_out.put(setpoint)
-
 if __name__ == '__main__':    
     try:
-        stepper_comms = [StepperComm() for x in range(2)]
+        stepper_comms = [StepperComm() for s in steppers]
 
         processes = [Process(target=run_motor_func(s), args=sc.get_args())
             for s, sc in zip(steppers, stepper_comms)]
@@ -75,4 +51,3 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print("Exiting...")
         pi.stop()
-
