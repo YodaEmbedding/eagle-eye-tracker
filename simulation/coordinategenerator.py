@@ -18,19 +18,22 @@ class CoordinateGenerator:
         self.width  = 0.4
         self.height = 0.3
 
+        self.update(0, quaternion.x, False)
+
     def draw(self, ax):
         """Draw a coordinate at location in image frame."""
         ax.scatter3D(*pos_quats_to_plot_coords([self._draw_quat]),
             s=50, color="#ff55bb")
 
-    def update(self, dt, rot):
+    def update(self, dt, rot, update_coord=True):
         """Updates generated coordinate.
 
         Args:
             dt (float): Time elapsed since last update() call.
             rot (float): Rotation quaternion to same frame as camera.
         """
-        self._update_coord(dt, rot)
+        if update_coord:
+            self._update_coord(dt, rot)
         v = self._get_offset_quat()
         self._draw_quat = apply_rotation(v, rot)
         self.dest_quat = self._draw_quat / np.abs(self._draw_quat)

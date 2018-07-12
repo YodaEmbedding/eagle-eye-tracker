@@ -26,15 +26,6 @@ class Path:
             self.t = -1.
             idx = 1
 
-        q_l = self.path_quat[idx - 1]
-        q_r = self.path_quat[idx]
-
-        t_l = self.path_t[idx - 1]
-        t_r = self.path_t[idx]
-        t = (max(self.t, 0.) - t_l) / (t_r - t_l)
-
-        return quaternion.squad(
-            self.path_quat,
-            self.path_t,
-            np.array([max(self.t, 0.)]))[0]
+        t = np.array([max(self.t, 0.)])
+        return quaternion.squad(self.path_quat, self.path_t, t)[0]
 

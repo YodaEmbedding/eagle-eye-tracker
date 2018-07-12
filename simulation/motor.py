@@ -1,7 +1,6 @@
 import numpy as np
 
 from .coordinatemath import shortest_rad
-from .latency import Latency
 
 class Motor:
     """Provides interface with virtual or physical motor and other useful functionality"""

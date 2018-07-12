@@ -1,8 +1,8 @@
 import numpy as np
 import quaternion
 
-from .coordinategenerator import CoordinateGenerator
-from .coordinatemath import *
+from .coordinatemath import (apply_rotation, euler_to_rot_quat,
+    pos_quat_to_euler, pos_quats_to_plot_coords, rot_quat_to_pos_quat)
 
 class MotionController:
     """Controls motors to move to desired position as fast as possible."""
@@ -23,6 +23,7 @@ class MotionController:
         self.curr_quat = q
         self.prev_dest_quat = q
         self.dest_quat = q
+        self.dest_quat_predict = q
 
         w = self.coordinate_generator.width
         h = self.coordinate_generator.height
@@ -60,19 +61,19 @@ class MotionController:
         self.prev_dest_quat = self.dest_quat
         self.dest_quat = self.coordinate_generator.dest_quat
 
-        phi_vel, th_vel = self._get_next_velocity(dt)
+        phi_vel, th_vel = self._get_next_velocity()
         self.motor_phi.set_velocity_setpoint(phi_vel)
         self.motor_th .set_velocity_setpoint(th_vel)
 
         self.rect_drawable = apply_rotation(self._rect_drawable_orig,
             self.curr_rot)
 
-    def _get_next_velocity(self, dt):
+    def _get_next_velocity(self):
         """Determine next setpoint velocities of motors."""
 
         self._predict_state()
 
-        curr = pos_quat_to_euler(self.curr_quat)
+        # curr = pos_quat_to_euler(self.curr_quat)
         dest = pos_quat_to_euler(self.dest_quat_predict)
 
         # TODO recommend_velocity to reach desired setpoint at a given velocity
