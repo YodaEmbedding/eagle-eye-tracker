@@ -2,9 +2,13 @@
 
 import multiprocessing as mp
 
+from rpi.client import CommClient
 from simulation.coordinategenerator import CoordinateGenerator
 from simulation.motioncontroller import MotionController
 from simulation.motor import Motor
+
+# TODO adapter with CoordinateGenerator (which, btw, is a really terrible name)
+comm = CommClient()
 
 # TODO assign proper params
 # TODO use MotorAdapter? MotorAdapter(VirtualMotor())...

@@ -4,9 +4,7 @@ from .coordinatemath import shortest_rad
 from .latency import Latency
 
 class Motor:
-    """Virtual motor object to simulate acceleration/inertia."""
-
-    # position = Latency(0.01)
+    """Provides interface with virtual or physical motor and other useful functionality"""
 
     def __init__(self, velocity_max, accel_max):
         self.position = 0.0

@@ -41,7 +41,6 @@ ani = FuncAnimation(fig, update, 65536, interval=50, blit=False)
 plt.show()
 
 # TODO
-# Doctest, Pytest
 # Document sign, axis conventions
 # PID controller
 # Pathing
@@ -49,9 +48,7 @@ plt.show()
 # Model time delay/latency, inertia
 # machine learn control hyperparameters (differentiable programming or genetic)
 # bounds of motion
-# reversal of orientation
 # Model inertia of camera mass (not just motors)
-# consider latency from camera->imageproc->coords too
 # renormalize after rotations? (prevents drift from surface of sphere)
 # switch to plot.ly, Mayavi2, etc?
 
