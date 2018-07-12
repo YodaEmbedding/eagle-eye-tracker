@@ -3,19 +3,20 @@ import quaternion
 
 from .coordinatemath import (apply_rotation, pos_quats_to_plot_coords)
 from .testpaths import test_paths
-from .path import Path
 
-# TODO modify actual coordinate generator to send betwen [0,1] [0,1] for x, y
+# TODO modify actual coordinate generator to send between [-1,1] [-1,1] for x, y
+# ensure proper aspect ratio that we expect
 class CoordinateGenerator:
     """Generates coordinates to simulate a moving object."""
 
-    def __init__(self):
-        # self.coord = (0.0, 1.0)  # TODO deal with case where we overshoot pole
+    def __init__(self, coord_getter_func=None):
+        self.coord_getter_func = coord_getter_func
+
         self.coord = (0.0, 0.0)
+
+        # TODO measure
         self.width  = 0.4
         self.height = 0.3
-
-        self.path = test_paths[0]
 
     def draw(self, ax):
         """Draw a coordinate at location in image frame."""
@@ -41,7 +42,12 @@ class CoordinateGenerator:
              self.height * self.coord[1])
 
     def _update_coord(self, dt, rot):
-        v = self.path.get_next_pos_quat(dt)
+        """Calculates next coord from coord_getter_func or path."""
+        if self.coord_getter_func is not None:
+            self.coord = self.coord_getter_func()
+            return
+
+        v = test_paths[0].get_next_pos_quat(dt)
         offset = apply_rotation(v, rot.inverse())
         coord = np.clip([
             -offset.y / self.width,
