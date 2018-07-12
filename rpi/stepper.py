@@ -9,6 +9,7 @@ class Stepper:
 
     DIRECTION_CCW = 0
     DIRECTION_CW = 1
+    SWITCHDIR_SPEED = 1000.0
 
     def __init__(self, pigpiod, ena_pin, dir_pin, step_pin):
         self.pi = pigpiod
@@ -27,6 +28,7 @@ class Stepper:
         self.step_interval = 0.0  # delay between steps
         self.last_step_time = 0.0
         self.dir = Stepper.DIRECTION_CW
+        self.dir_flag = Stepper.DIRECTION_CW
 
         # Variables named after those used in article.
         self.n = 0  # step counter. Positive is accelerating, negative is deaccelerating.
@@ -48,19 +50,25 @@ class Stepper:
     def set_velocity_setpoint(self, velocity):
         # TODO: lock = acquire_lock()
 
-        if self.velocity_setpoint == velocity:
+        if velocity == 0:
             return
         # TODO: Deaccelerate before changing direction
         if velocity < 0.0:
-            self.velocity_setpoint = -velocity
-            self.dir = Stepper.DIRECTION_CCW
+            print("set ccw")
+            self.dir_flag = Stepper.DIRECTION_CCW
         else:
-            self.velocity_setpoint = velocity
-            self.dir = Stepper.DIRECTION_CW
+            print("set cw")
+            self.dir_flag = Stepper.DIRECTION_CW
 
-        self.c_min = 1000000.0 / self.velocity_setpoint
+        self.velocity_setpoint = abs(velocity)
+        if (self.dir_flag != self.dir):
+            print("deaccelerate to switchdir speed")
+            self.c_min = 1000000.0 / Stepper.SWITCHDIR_SPEED
+        else:
+            self.c_min = 1000000.0 / self.velocity_setpoint
         if (self.velocity_setpoint < self.velocity and self.n > 0) or \
-                (self.velocity_setpoint > self.velocity and self.n < 0):
+                (self.velocity_setpoint > self.velocity and self.n < 0) or \
+                    (self.dir_flag != self.dir):
             self.n = -self.n
             self._compute_new_velocity()
         # lock.release()
@@ -94,6 +102,12 @@ class Stepper:
     # Computes new velocity after each step, or changes to velocity setpoint, acceleration
     def _compute_new_velocity(self):
         # First step
+        if self.dir_flag != self.dir and self.velocity <= Stepper.SWITCHDIR_SPEED:
+            print("switch dir and accelerate")
+            self.dir = self.dir_flag
+            self.n = abs(self.n)
+            self.c_min = 1000000.0 / self.velocity_setpoint
+
         if self.n == 0 and self.velocity != self.velocity_setpoint:
             self.c_n = self.c_0
         else:
@@ -121,41 +135,5 @@ class Stepper:
     # Performs a step with pulse of minimal width.
     def _step(self):
         self.pi.write(self.dir_pin, self.dir)
+        #print("Direction: " + str(self.dir))
         self.pi.gpio_trigger(self.step_pin, 20, 1)
-
-
-pi = pigpio.pi()
-if not pi.connected:
-    exit()
-try:
-    # TODO: Drive two motors simulataneously.
-    # Also look into negative velocity bug?
-    #   stepper.set_velocity_setpoint(-1000)
-    #   stepper.set_acceleration(500)
-    stepper = Stepper(pi, 16, 20, 21)
-    stepper.set_velocity_setpoint(4000)
-    stepper.set_acceleration(500)
-    state = 0
-
-    while True:
-        if state == 0 and stepper.velocity > 3000:
-            print (" down ")
-            stepper.set_velocity_setpoint(1000)
-            state = 1
-        if state == 1 and stepper.velocity == 1000:
-            print (" up ")
-            stepper.set_velocity_setpoint(2000)
-            state = 2
-        if state == 2 and stepper.velocity == 2000:
-            print(" ccw ")
-            stepper.set_velocity_setpoint(-1000)
-            state = 3
-        if state == 3 and stepper.velocity == 1000:
-            print(" cw ")
-            stepper.set_velocity_setpoint(4000)
-            state = 4
-        stepper.run()
-
-except KeyboardInterrupt:
-    print("\nExiting...")
-    pi.stop() # TODO: Switch ENA back to high
