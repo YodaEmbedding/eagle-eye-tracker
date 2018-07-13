@@ -21,3 +21,7 @@ class StepperComm:
 
     def set_velocity_setpoint(self, setpoint):
         self.queue_out.put(setpoint)
+
+    def update(self, dt):
+        pass
+

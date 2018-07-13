@@ -2,9 +2,10 @@ import pytest
 from pytest import approx
 
 from simulation.motor import Motor
+from simulation.virtualmotor import VirtualMotor
 
 def test_motor_recommended_accel():
-    motor = Motor(velocity_max=2.0, accel_max=1.0)
+    motor = Motor(VirtualMotor(accel_max=1.0, velocity_max=2.0))
     f = motor.recommend_accel
     zero = approx(0.0)
 
@@ -19,16 +20,16 @@ def test_motor_recommended_accel():
 
     asserts()
 
-    motor.position = 1.0
+    motor.motor.position = 1.0
     asserts()
 
-    motor.velocity = 0.8
+    motor.motor.velocity = 0.8
     asserts()
 
-    motor.velocity = -0.8
+    motor.motor.velocity = -0.8
     asserts()
 
-    motor.position = -1.0
+    motor.motor.position = -1.0
     asserts()
 
     # TODO also try with recommended velocity, running update,

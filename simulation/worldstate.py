@@ -5,12 +5,13 @@ from .coordinategenerator import CoordinateGenerator
 from .drawutils import draw_sphere, set_axes_radius
 from .motioncontroller import MotionController
 from .motor import Motor
+from .virtualmotor import VirtualMotor
 
 class WorldState:
     def __init__(self):
         coordinate_generator = CoordinateGenerator()
-        motor_phi = Motor(velocity_max=3.0, accel_max=1.5)
-        motor_th  = Motor(velocity_max=3.0, accel_max=1.5)
+        motor_phi = Motor(VirtualMotor(accel_max=1.5, velocity_max=3.0))
+        motor_th  = Motor(VirtualMotor(accel_max=1.5, velocity_max=3.0))
 
         self.motion_controller = MotionController(coordinate_generator,
             motor_phi, motor_th)
