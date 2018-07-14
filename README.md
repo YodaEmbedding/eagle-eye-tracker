@@ -41,17 +41,21 @@ Finally, be sure to upload the [NBC/NXC Enhanced Firmware](http://bricxcc.source
 
 ## Usage
 
-To compile, download, run the program on the NXT; and run the Python script:
+To run the simulation:
 
-    make run_nxt
+    make run_sim
 
 To run the GUI:
 
     make run_gui
 
-To run the simulation:
+To run on the Raspberry Pi, clone this repository and then run:
 
-    make run_sim
+    make run_rpi
+
+[DEPRECATED] To compile, download, run the program on the NXT; and run the Python script:
+
+    make run_nxt
 
 To run tests:
 

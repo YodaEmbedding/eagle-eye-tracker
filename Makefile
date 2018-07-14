@@ -19,6 +19,9 @@ run_nxt:
 	sleep 1
 	python3 eagleeyetracker_nxt.py
 
+run_rpi:
+	python3 eagleeyetracker_rpi.py
+
 run_sim:
 	python3 simulation.py
 
