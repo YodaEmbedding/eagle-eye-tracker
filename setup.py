@@ -17,5 +17,6 @@ setup(
     install_requires=[
         'numpy-quaternion',
         'numpy_ringbuffer',
+        'pigpio',
     ],
 )
