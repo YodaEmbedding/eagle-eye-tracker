@@ -1,14 +1,20 @@
-# Credits to Mike McCauley's AccelStepper library, which is based off of the article below.
-# https://www.embedded.com/design/mcus-processors-and-socs/4006438/Generate-stepper-motor-speed-profiles-in-real-time
-import time
 import math
+import time
+
 import pigpio
 
 class Stepper:
+    """Control stepper motor on Raspberry Pi.
+
+    Credits to Mike McCauley's AccelStepper library, which is based off of the article below:
+    https://www.embedded.com/design/mcus-processors-and-socs/4006438/Generate-stepper-motor-speed-profiles-in-real-time
+    """
+
     DIRECTION_CCW = 0
     DIRECTION_CW = 1
     SWITCHDIR_SPEED = 100.0
     MICROSTEPS = 51200
+
     # def set_velocity_setpoint(self):
     #     accel_sign = np.sign(self.velocity_setpoint - self.velocity)
     #     self.acceleration = accel_sign * self.accel_max
@@ -19,7 +25,7 @@ class Stepper:
     #     step_interval = abs(self.velocity * dt)
     #     if step_interval >= 1:
     #         self._step()
-    #         self.curr_pos += ???
+    #         self.position += ???
     #         self.velocity = np.clip(self.velocity + self.acceleration * dt,
     #             -self.velocity_max,
     #              self.velocity_max)
@@ -33,7 +39,7 @@ class Stepper:
         self.step_pin = step_pin
 
         # All in terms of steps
-        self.curr_pos = 0
+        self.position = 0
         self.velocity = 0.0
         self.velocity_setpoint = 1.0
         self.acceleration = 1.0
@@ -86,7 +92,7 @@ class Stepper:
         self.velocity_setpoint = 0.001 if velocity == 0 else abs(velocity)
         self.dir_flag = Stepper.DIRECTION_CCW if velocity < 0.0 else Stepper.DIRECTION_CW
 
-        if (self.dir_flag != self.dir):
+        if self.dir_flag != self.dir:
             print("deaccelerate to switchdir speed")
             self.c_min = 1000000.0 / Stepper.SWITCHDIR_SPEED
             self.n = -self.n
@@ -122,9 +128,9 @@ class Stepper:
 
         # Step is due
         if self.dir == Stepper.DIRECTION_CW:
-            self.curr_pos += 1
+            self.position += 1
         else:
-            self.curr_pos -= 1
+            self.position -= 1
 
         self._step()
         self.last_step_time = curr_time
@@ -149,10 +155,8 @@ class Stepper:
         else:
             self.c_n = self.c_n - ((2.0 * self.c_n) / ((4.0 * self.n) + 1))  # Equation 13
 
-            if self.n > 0:
-                self.c_n = max(self.c_n, self.c_min)
-            else:
-                self.c_n = min(self.c_n, self.c_min)
+            # Could this be made more clear by some sign()-based formula?
+            self.c_n = (max if self.n > 0 else min)(self.c_n, self.c_min)
 
         self.n += 1
         self.step_interval = self.c_n
@@ -165,7 +169,7 @@ class Stepper:
         # print("c_min " + str(self.c_min))
         # print("n: " + str(self.n))
         # print("Step Interval: " + str(self.step_interval))
-        # print("Current Position: " + str(self.curr_pos))
+        # print("Current Position: " + str(self.position))
         # print("-------------------------------")
 
     def _step(self):
@@ -183,4 +187,5 @@ class Stepper:
         steps = degrees * MICROSTEPS / 1.8
         return steps
 
-# TODO: reverse direction, drive faster! (switch modes?), to_rad, to_step
+# TODO: reverse direction, drive faster! (switch modes?)
+
