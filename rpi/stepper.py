@@ -4,14 +4,27 @@ import time
 import math
 import pigpio
 
-
 class Stepper:
-
     DIRECTION_CCW = 0
     DIRECTION_CW = 1
-    SWITCHDIR_SPEED = 1000.0
+    SWITCHDIR_SPEED = 100.0
+    MICROSTEPS = 51200
+    # def set_velocity_setpoint(self):
+    #     accel_sign = np.sign(self.velocity_setpoint - self.velocity)
+    #     self.acceleration = accel_sign * self.accel_max
+    # JK NVM    cap accel depending on velocity
 
-    def __init__(self, pigpiod, ena_pin, dir_pin, step_pin):
+    # def basic_run(self):
+    #     dt = time since last step
+    #     step_interval = abs(self.velocity * dt)
+    #     if step_interval >= 1:
+    #         self._step()
+    #         self.curr_pos += ???
+    #         self.velocity = np.clip(self.velocity + self.acceleration * dt,
+    #             -self.velocity_max,
+    #              self.velocity_max)
+
+    def __init__(self, pigpiod, ena_pin, dir_pin, step_pin, accel_max, velocity_max):
         self.pi = pigpiod
 
         # GPIO pin numbers (BCM)
@@ -41,37 +54,50 @@ class Stepper:
         self.pi.set_mode(self.ena_pin, pigpio.OUTPUT)
         self.pi.write(self.ena_pin, 0)  # Enable is active low.
 
-    # Polling function that runs at most one step per call, none if step interval has not been reached.
+        self.accel_max = accel_max
+        self.set_acceleration(self.accel_max)
+        self.velocity_max = velocity_max
+
+    @property
+    def accel_max_rad(self):
+        return self._to_radians(self.accel_max)
+
+    @property
+    def velocity_max_rad(self):
+        return self._to_radians(self.velocity_max)
+
+    @property
+    def position_rad(self):
+        return self._to_radians(self.position)
+
+    @property
+    def velocity_rad(self):
+        return self._to_radians(self.velocity)
+
     def run(self):
+        """Polling function that runs at most one step per call, none if step interval has not been reached."""
         if self._run_velocity():
             self._compute_new_velocity()
-        return self.velocity != 0.0
+
+    def set_velocity_setpoint_rad(self, setpoint):
+        self.set_velocity_setpoint(self._to_steps(setpoint))
 
     def set_velocity_setpoint(self, velocity):
-        # TODO: lock = acquire_lock()
+        self.velocity_setpoint = 0.001 if velocity == 0 else abs(velocity)
+        self.dir_flag = Stepper.DIRECTION_CCW if velocity < 0.0 else Stepper.DIRECTION_CW
 
-        if velocity == 0:
-            return
-        # TODO: Deaccelerate before changing direction
-        if velocity < 0.0:
-            print("set ccw")
-            self.dir_flag = Stepper.DIRECTION_CCW
-        else:
-            print("set cw")
-            self.dir_flag = Stepper.DIRECTION_CW
-
-        self.velocity_setpoint = abs(velocity)
         if (self.dir_flag != self.dir):
             print("deaccelerate to switchdir speed")
             self.c_min = 1000000.0 / Stepper.SWITCHDIR_SPEED
+            self.n = -self.n
         else:
             self.c_min = 1000000.0 / self.velocity_setpoint
-        if (self.velocity_setpoint < self.velocity and self.n > 0) or \
-                (self.velocity_setpoint > self.velocity and self.n < 0) or \
-                    (self.dir_flag != self.dir):
+
+        if ((self.velocity_setpoint < self.velocity and self.n > 0) or
+            (self.velocity_setpoint > self.velocity and self.n < 0)):
             self.n = -self.n
-            self._compute_new_velocity()
-        # lock.release()
+
+        self._compute_new_velocity()
 
     def set_acceleration(self, acceleration):
         if self.acceleration == acceleration:
@@ -82,25 +108,35 @@ class Stepper:
         self._compute_new_velocity()
 
     def _run_velocity(self):
+        """Update position and step if on time.
+
+        Returns:
+            True if successfully stepped"""
+
         if self.step_interval == 0.0:
             return False
 
         curr_time = time.perf_counter() * 1000000.0
-        # Step is due.
-        if curr_time - self.last_step_time >= self.step_interval:
-            if self.dir == Stepper.DIRECTION_CW:
-                self.curr_pos += 1
-            else:
-                self.curr_pos -= 1
-
-            self._step()
-            self.last_step_time = curr_time
-            return True
-        else:
+        if curr_time - self.last_step_time < self.step_interval:
             return False
 
-    # Computes new velocity after each step, or changes to velocity setpoint, acceleration
+        # Step is due
+        if self.dir == Stepper.DIRECTION_CW:
+            self.curr_pos += 1
+        else:
+            self.curr_pos -= 1
+
+        self._step()
+        self.last_step_time = curr_time
+
+        return True
+
     def _compute_new_velocity(self):
+        """Determine next step_interval and update velocity.
+
+        Typically called after each step, or changes to velocity setpoint, acceleration.
+        """
+
         # First step
         if self.dir_flag != self.dir and self.velocity <= Stepper.SWITCHDIR_SPEED:
             print("switch dir and accelerate")
@@ -132,8 +168,19 @@ class Stepper:
         # print("Current Position: " + str(self.curr_pos))
         # print("-------------------------------")
 
-    # Performs a step with pulse of minimal width.
     def _step(self):
+        """Performs a step with pulse of minimal width."""
         self.pi.write(self.dir_pin, self.dir)
-        #print("Direction: " + str(self.dir))
         self.pi.gpio_trigger(self.step_pin, 20, 1)
+
+    def _to_radians(self, steps):
+        degrees = steps * 1.8 / MICROSTEPS
+        radians = degrees * math.pi / 180
+        return radians
+
+    def _to_steps(self, radians):
+        degrees = radians * 180 / math.pi
+        steps = degrees * MICROSTEPS / 1.8
+        return steps
+
+# TODO: reverse direction, drive faster! (switch modes?), to_rad, to_step
