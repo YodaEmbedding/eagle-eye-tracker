@@ -42,8 +42,8 @@ if __name__ == '__main__':
     coordinate_generator = CoordinateGenerator()
 
     stepper_comms = [StepperComm(s.accel_max, s.velocity_max) for s in steppers]
-    motor_phi = Motor(stepper_comm[0])
-    motor_th  = Motor(stepper_comm[1])
+    motor_phi = Motor(stepper_comm[0], bound_min=-0.5*np.pi, bound_max=0.5*np.pi)
+    motor_th  = Motor(stepper_comm[1], bound_min=-0.5*np.pi, bound_max=0.0)
 
     motion_controller = MotionController(coordinate_generator,
         motor_phi, motor_th)

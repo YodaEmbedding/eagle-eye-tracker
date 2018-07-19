@@ -10,8 +10,11 @@ from .virtualmotor import VirtualMotor
 class WorldState:
     def __init__(self):
         coordinate_generator = CoordinateGenerator()
-        motor_phi = Motor(VirtualMotor(accel_max=1.5, velocity_max=3.0))
-        motor_th  = Motor(VirtualMotor(accel_max=1.5, velocity_max=3.0))
+        motor_phi = Motor(VirtualMotor(accel_max=1.5, velocity_max=3.0),
+            bound_min=-np.inf, bound_max=np.inf)
+            # bound_min=-0.5*np.pi, bound_max=0.5*np.pi)
+        motor_th  = Motor(VirtualMotor(accel_max=1.5, velocity_max=3.0),
+            bound_min=-0.5*np.pi, bound_max=0.0)
 
         self.motion_controller = MotionController(coordinate_generator,
             motor_phi, motor_th)

@@ -5,8 +5,10 @@ from .coordinatemath import shortest_rad
 class Motor:
     """Provides interface with virtual or physical motor and other useful functionality"""
 
-    def __init__(self, motor):
+    def __init__(self, motor, bound_min=-np.inf, bound_max=np.inf):
         self.motor = motor
+        self.bound_min = bound_min
+        self.bound_max = bound_max
 
     @property
     def position(self):
@@ -34,6 +36,7 @@ class Motor:
         """Recommends an acceleration given desired position"""
         if nearest_angle:
             setpoint = self.to_nearest_angle(setpoint)
+        setpoint = self._constrain_bounds(setpoint)
         diff = setpoint - self.get_stop_position()
         direction = np.sign(diff
             if diff != 0 else -self.velocity
@@ -55,3 +58,5 @@ class Motor:
     def update(self, dt):
         self.motor.update(dt)
 
+    def _constrain_bounds(self, setpoint):
+        return np.clip(setpoint, self.bound_min, self.bound_max)
