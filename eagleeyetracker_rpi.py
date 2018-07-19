@@ -53,7 +53,7 @@ if __name__ == '__main__':
     # TODO adapter with CoordinateGenerator (which, btw, is a really terrible name)
     comm = CommClient()
     comm_comm = CommComm()
-    coordinate_generator = CoordinateGenerator(lambda: comm.latest_msg)
+    coordinate_generator = CoordinateGenerator(lambda: comm.latest_coord)
 
     stepper_comms = [StepperComm(s.accel_max, s.velocity_max) for s in steppers]
     motor_phi = Motor(stepper_comm[0], bound_min=-0.5*np.pi, bound_max=0.5*np.pi)
