@@ -9,7 +9,7 @@ class Stepper:
 
     DIRECTION_CCW = 0
     DIRECTION_CW = 1
-    MICROSTEPS = 51200
+    STEPS_PER_REV = 51200.0
 
     def __init__(self, pigpiod, ena_pin, dir_pin, step_pin, accel_max, velocity_max):
         self.pi = pigpiod
@@ -95,14 +95,12 @@ class Stepper:
 
     def _to_radians(self, steps):
         """Converts steps to radians based on step size of motor driver."""
-        degrees = steps * 1.8 / Stepper.MICROSTEPS
-        radians = degrees * math.pi / 180
+        radians = steps * 2 * math.pi / Stepper.STEPS_PER_REV
         return radians
 
     def _to_steps(self, radians):
         """Converts radians to steps."""
-        degrees = radians * 180 / math.pi
-        steps = degrees * Stepper.MICROSTEPS / 1.8
+        steps = radians * Stepper.STEPS_PER_REV / (2 * math.pi)
         return steps
 
 # TODO: drive faster! (switch modes?)
