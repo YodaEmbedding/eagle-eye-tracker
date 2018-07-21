@@ -1,4 +1,6 @@
 # TODO insert process too? or is that stupid
+from multiprocessing import Queue
+
 class CommComm:
     def __init__(self):
         self.queue_in  = Queue()

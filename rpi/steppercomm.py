@@ -1,26 +1,36 @@
 # TODO insert process too? or is that stupid
+from multiprocessing import Value
+
 class StepperComm:
     def __init__(self, accel_max, velocity_max):
-        self.queue_in  = Queue()
-        self.queue_out = Queue()
-
-        self.position = 0.0
-        self.velocity = 0.0
+        
+        self.position_s = Value('f', 0.0)
+        self.velocity_s = Value('f', 0.0)
+        self.velocity_setpoint_s = Value('f', 0.0)
 
         self.accel_max = accel_max
         self.velocity_max = velocity_max
+    
+    @property
+    def position(self):
+        return self.position_s.value
+    
+    @property
+    def velocity(self):
+        return self.velocity_s.value
+    
+    @property
+    def velocity_setpoint(self):
+        return self.velocity_setpoint_s.value
 
     def get_args(self):
-        return self.queue_out, self.queue_in
+        return self.position_s, self.velocity_s, self.velocity_setpoint_s
 
     def run(self):
-        # TODO this is stupid
-        # Clear queue
-        while not self.queue_in.empty():
-            self.position, self.velocity = self.queue_in.get()
+        pass
 
     def set_velocity_setpoint(self, setpoint):
-        self.queue_out.put(setpoint)
+        self.velocity_setpoint_s.value = setpoint
 
     def update(self, dt):
         pass
