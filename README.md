@@ -9,7 +9,7 @@ Group members: Mateen Ulhaq, Bud Yarrow, Arman Athwal, Naim Tejani, Victor Yun, 
 
 ![GUI](https://i.imgur.com/DR9QPH2.png)
 
-[![Simulation video](https://i.imgur.com/yu5lwIm.jpg)](https://streamable.com/kx8lq)
+[![Simulation video](https://i.imgur.com/yu5lwIm.jpg)](https://streamable.com/2h9tx)
 
 This project features a general-purpose object tracking system. Typical applications include:
 
