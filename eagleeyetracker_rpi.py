@@ -69,13 +69,19 @@ if __name__ == '__main__':
     for p in processes:
         p.start()
 
+    mc_prev_time = time.perf_counter()
+
     try:
         while True:
             #comm_comm.run()
 
-            mc_dt = 50 / 1000
-            motion_controller.update(mc_dt)
-            
+            curr_time = time.perf_counter()
+            mc_dt = curr_time - mc_prev_time
+
+            if mc_dt >= 2**-8:
+                motion_controller.update(mc_dt)
+                mc_prev_time = curr_time
+
             for x in stepper_comms:
                 x.run()
                 print("Position: " + str(x.position))
