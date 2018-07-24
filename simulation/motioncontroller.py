@@ -93,4 +93,3 @@ class MotionController:
             self.prev_dest_quat, self.dest_quat, 4.0)
 
         # TODO dest_quat_vel
-

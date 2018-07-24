@@ -20,4 +20,3 @@ class Latency:
 
         while len(self.buffer) > 1 and self.buffer[1][0] < expiration:
             self.buffer.popleft()
-

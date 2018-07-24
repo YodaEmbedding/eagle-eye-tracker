@@ -13,4 +13,3 @@ def set_axes_radius(ax, origin, radius):
     ax.set_xlim3d([origin[0] - radius, origin[0] + radius])
     ax.set_ylim3d([origin[1] - radius, origin[1] + radius])
     ax.set_zlim3d([origin[2] - radius, origin[2] + radius])
-

@@ -182,4 +182,3 @@ def shortest_deg(src, dest):
 def shortest_rad(src, dest):
     """Find shortest signed angle between dest and src."""
     return (dest - src + np.pi) % (2 * np.pi) - np.pi
-

@@ -34,4 +34,3 @@ if __name__ == "__main__":
         comm.send_msg(msg)
 
     comm.close()
-

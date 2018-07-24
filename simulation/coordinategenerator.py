@@ -56,4 +56,3 @@ class CoordinateGenerator:
             -offset.y / self.width,
              offset.z / self.height], -1., 1.)
         self.coord = tuple(coord)
-

@@ -51,4 +51,3 @@ plt.show()
 # Model inertia of camera mass (not just motors)
 # renormalize after rotations? (prevents drift from surface of sphere)
 # switch to plot.ly, Mayavi2, etc?
-

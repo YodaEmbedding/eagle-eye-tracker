@@ -1,5 +1,5 @@
-# TODO insert process too? or is that stupid
 from multiprocessing import Queue
+import re
 
 class CommComm:
     def __init__(self):
@@ -25,4 +25,3 @@ class CommComm:
     def _parse_msg(self):
         m = re.match(r'\((\d+\.?\d*),(\d+\.?\d*)\)', self.latest_msg).groups()
         self.latest_coord = (float(m[0]), float(m[1]))
-

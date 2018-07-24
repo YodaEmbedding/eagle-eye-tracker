@@ -21,10 +21,9 @@ def run_motor_func(stepper):
             position.value = stepper.position
             velocity.value = stepper.velocity
             stepper.set_velocity_setpoint(velocity_setpoint.value)
-
     return run_motor
 
-if __name__ == '__main__':    
+if __name__ == '__main__':
     try:
         stepper_comms = [StepperComm(s.accel_max_rad, s.velocity_max_rad) for s in steppers]
 
@@ -39,7 +38,7 @@ if __name__ == '__main__':
                 print(x.position)
                 #print(x.velocity)
                 x.set_velocity_setpoint(randint(-4000, 4000))
-            
+
             time.sleep(10)
 
     except KeyboardInterrupt:

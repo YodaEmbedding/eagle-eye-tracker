@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from multiprocessing import Process, Queue
+from multiprocessing import Process
 import pigpio
 import time
 import math
@@ -14,6 +14,7 @@ from simulation.coordinategenerator import CoordinateGenerator
 from simulation.motioncontroller import MotionController
 from simulation.motor import Motor
 
+# TODO might be cleaner to just put this inside stepper
 def run_motor_func(stepper):
     def run_motor(position, velocity, velocity_setpoint):
         while True:
@@ -21,7 +22,6 @@ def run_motor_func(stepper):
             position.value = stepper.position_rad
             velocity.value = stepper.velocity_rad
             stepper.set_velocity_setpoint_rad(velocity_setpoint.value)
-            
     return run_motor
 
 def run_comm_func(comm):
@@ -45,7 +45,6 @@ if __name__ == '__main__':
         Stepper(pi, 16, 20, 21, accel_max=1000, velocity_max=4000),
         Stepper(pi, 13, 19, 26, accel_max=1000, velocity_max=4000)]
 
-
     # TODO adapter with CoordinateGenerator (which, btw, is a really terrible name)
     #comm = CommClient()
     #comm_comm = CommComm()
@@ -57,12 +56,12 @@ if __name__ == '__main__':
 
     motion_controller = MotionController(coordinate_generator,
         motor_phi, motor_th)
-    
+
     #processes = (
     #    [Process(target=run_motor_func(s), args=sc.get_args())
     #       for s, sc in zip(steppers, stepper_comms)] +
     #    [Process(target=run_comm_func(comm), args=comm_comm.get_args())])
-    
+
     processes = [Process(target=run_motor_func(s), args=sc.get_args())
             for s, sc in zip(steppers, stepper_comms)]
 
@@ -85,7 +84,7 @@ if __name__ == '__main__':
             for x in stepper_comms:
                 x.run()
                 print("Position: " + str(x.position))
-                print("Velocity:" + str(x.velocity))
+                print("Velocity: " + str(x.velocity))
                 print(x.velocity_setpoint) # Max velocity is always recommended as the setpoint by motion controller..is that expected?
 
     except KeyboardInterrupt:

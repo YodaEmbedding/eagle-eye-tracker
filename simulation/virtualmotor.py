@@ -22,4 +22,3 @@ class VirtualMotor:
             -self.velocity_max,
              self.velocity_max)
         self.position += dt * self.velocity
-

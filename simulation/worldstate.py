@@ -55,4 +55,3 @@ class WorldState:
         self.motion_controller.update(dt)
         error = np.linalg.norm(self.motion_controller.coordinate_generator.coord)
         self.error_history.append(error)
-

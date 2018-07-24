@@ -36,4 +36,3 @@ if __name__ == "__main__":
 
     print('Total time: ', t2 - t1, 'seconds')
     print('Average time: ', (t2 - t1) / 1000, 'seconds')
-

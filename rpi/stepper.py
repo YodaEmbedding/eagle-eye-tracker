@@ -55,6 +55,7 @@ class Stepper:
 
     def run(self):
         """Polling function that runs at most one step per call, none if step distance has not been reached."""
+
         if self.state == 0:
             self.last_step_time = time.perf_counter()
             self.velocity = self.acceleration / 10.0
@@ -64,19 +65,20 @@ class Stepper:
         dt = curr_time - self.last_step_time
         distance = abs(self.velocity * dt)
 
-        # Step is due
-        if distance >= 1.0:
+        # Step distance not reached
+        if distance < 1.0:
+            return
 
-            if self.velocity > 0.0:
-                self.dir = Stepper.DIRECTION_CW
-                self.position += 1
-            else:
-                self.dir = Stepper.DIRECTION_CCW
-                self.position -= 1
+        if self.velocity > 0.0:
+            self.dir = Stepper.DIRECTION_CW
+            self.position += 1
+        else:
+            self.dir = Stepper.DIRECTION_CCW
+            self.position -= 1
 
-            self._step()
-            self.last_step_time = curr_time
-            self.velocity = (min if self.acceleration > 0.0 else max)(self.velocity + self.acceleration * dt, self.velocity_setpoint)
+        self._step()
+        self.last_step_time = curr_time
+        self.velocity = (min if self.acceleration > 0.0 else max)(self.velocity + self.acceleration * dt, self.velocity_setpoint)
 
     def set_velocity_setpoint_rad(self, velocity):
         """Set velocity that motors will accelerate/deaccelerate to, in radians."""

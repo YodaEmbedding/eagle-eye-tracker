@@ -1,11 +1,11 @@
 import pigpio
-import time
 
 from stepper import Stepper
 
 pi = pigpio.pi()
 if not pi.connected:
     exit()
+
 try:
     # look into negative velocity bug?
     #   stepper.set_velocity_setpoint(-1000)
@@ -32,11 +32,10 @@ try:
         stepper.run()
         #stepper2.run()
 
-
 except KeyboardInterrupt:
     print("\nExiting...")
      # TODO: Switch ENA back to high
 
-finally: 
+finally:
     pi.write(22, 1)
     print("done")

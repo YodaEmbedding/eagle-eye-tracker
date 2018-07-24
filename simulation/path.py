@@ -28,4 +28,3 @@ class Path:
 
         t = np.array([max(self.t, 0.)])
         return quaternion.squad(self.path_quat, self.path_t, t)[0]
-
