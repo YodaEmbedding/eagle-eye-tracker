@@ -38,6 +38,8 @@ def test_stepper(monkeypatch):
     monkeypatch.setattr(time, 'perf_counter', mock_time)
     stepper = Stepper(PiMock(), 0, 1, 2, accel_max=1000, velocity_max=4000)
 
+    approx_ = lambda x: approx(x, rel=0.1, abs=0.1)
+
     times = []
     position_hist = []
     velocity_hist = []
@@ -65,7 +67,7 @@ def test_stepper(monkeypatch):
         run(stepper, update_hist, 1.0)
         assert stepper.dir == Stepper.DIRECTION_CW
         assert stepper.position > 0
-        assert stepper.velocity == approx(1000)
+        assert stepper.velocity == approx_(1000.0)
 
         # Reverse direction, but not instantaneously!
         stepper.set_velocity_setpoint(-1000)
@@ -76,11 +78,14 @@ def test_stepper(monkeypatch):
         assert stepper.velocity < 1000
 
         run(stepper, update_hist, 1.0 - 1e-3)
-        # assert stepper.dir == Stepper.DIRECTION_CCW  # Fails test.
         assert stepper.position > 0
-        # assert stepper.velocity == approx(0)  # Fails test.
+        assert stepper.velocity == approx_(0.0)
 
-        run(stepper, update_hist, 1.0)
+        run(stepper, update_hist, 1e-3)
+        assert stepper.dir == Stepper.DIRECTION_CCW
+        assert stepper.position > 0
+
+        run(stepper, update_hist, 1.0 - 1e-3)
         assert stepper.dir == Stepper.DIRECTION_CCW
         assert stepper.position > 0
         assert stepper.velocity < 0

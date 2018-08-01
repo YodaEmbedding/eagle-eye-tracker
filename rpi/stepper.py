@@ -57,15 +57,19 @@ class Stepper:
     def run(self):
         """Polling function that runs at most one step per call, none if step distance has not been reached."""
 
+        curr_time = time.perf_counter()
+        dt_run = curr_time - self.last_run_time
+        self.last_run_time = curr_time
+
         if not self._is_initialized:
-            self.last_run_time = self.last_step_time = time.perf_counter()
             self._is_initialized = True
             return
 
-        curr_time = time.perf_counter()
-        dt_run = curr_time - self.last_run_time
-        self.velocity = (min if self.acceleration > 0.0 else max)(self.velocity + self.acceleration * dt_run, self.velocity_setpoint)
-        self.last_run_time = curr_time
+        self.velocity = (min if self.acceleration > 0.0 else max)(
+            self.velocity + self.acceleration * dt_run,
+            self.velocity_setpoint)
+        self.dir = (Stepper.DIRECTION_CW if self.velocity > 0.0 else
+            Stepper.DIRECTION_CCW)
 
         dt_step = curr_time - self.last_step_time
         distance = abs(self.velocity * dt_step)
@@ -74,14 +78,8 @@ class Stepper:
         if distance < 1.0:
             return
 
-        if self.velocity > 0.0:
-            self.dir = Stepper.DIRECTION_CW
-            self.position += 1
-        else:
-            self.dir = Stepper.DIRECTION_CCW
-            self.position -= 1
-
         self._step()
+        self.position += 1 if self.velocity > 0.0 else -1
         self.last_step_time = curr_time
 
     def set_velocity_setpoint_rad(self, velocity):
@@ -108,7 +106,7 @@ class Stepper:
         """Converts radians to steps."""
         steps = radians * Stepper.STEPS_PER_REV / (2 * math.pi)
         return steps
-    
+
     def enable_off(self):
         self.pi.write(self.ena_pin, 1)
 
