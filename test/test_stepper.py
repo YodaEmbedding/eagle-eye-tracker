@@ -47,43 +47,51 @@ def test_stepper(monkeypatch):
         position_hist.append(stepper.position)
         velocity_hist.append(stepper.velocity)
 
-    # Move CW direction
-    stepper.set_velocity_setpoint(1000)
+    def plot():
+        fig, ax = plt.subplots()
+        ax.set_title('test_stepper')
+        ax.set_xlabel('Time (s)')
+        ax.set_ylabel('Position / Velocity')
+        ax.axhline(y=0, linewidth=1, color='w')
+        ax.plot(times, position_hist, label="position")
+        ax.plot(times, velocity_hist, label="velocity")
+        ax.legend()
+        fig.savefig('log/test_stepper.png', dpi=150)
 
-    run(stepper, update_hist, 1.0)
-    assert stepper.dir == Stepper.DIRECTION_CW
-    assert stepper.position > 0
-    assert stepper.velocity == approx(1000)
+    try:
+        # Move CW direction
+        stepper.set_velocity_setpoint(1000)
 
-    # Reverse direction, but not instantaneously!
-    stepper.set_velocity_setpoint(-1000)
+        run(stepper, update_hist, 1.0)
+        assert stepper.dir == Stepper.DIRECTION_CW
+        assert stepper.position > 0
+        assert stepper.velocity == approx(1000)
 
-    run(stepper, update_hist, 1e-3)
-    assert stepper.dir == Stepper.DIRECTION_CW
-    assert stepper.position > 0
-    assert stepper.velocity < 1000
+        # Reverse direction, but not instantaneously!
+        stepper.set_velocity_setpoint(-1000)
 
-    run(stepper, update_hist, 1.0 - 1e-3)
-    # assert stepper.dir == Stepper.DIRECTION_CCW  # Fails test.
-    assert stepper.position > 0
-    # assert stepper.velocity == approx(0)  # Fails test.
+        run(stepper, update_hist, 1e-3)
+        assert stepper.dir == Stepper.DIRECTION_CW
+        assert stepper.position > 0
+        assert stepper.velocity < 1000
 
-    run(stepper, update_hist, 1.0)
-    assert stepper.dir == Stepper.DIRECTION_CCW
-    assert stepper.position > 0
-    assert stepper.velocity < 0
+        run(stepper, update_hist, 1.0 - 1e-3)
+        # assert stepper.dir == Stepper.DIRECTION_CCW  # Fails test.
+        assert stepper.position > 0
+        # assert stepper.velocity == approx(0)  # Fails test.
 
-    run(stepper, update_hist, 1.0)
-    assert stepper.dir == Stepper.DIRECTION_CCW
-    assert stepper.position < 0
-    assert stepper.velocity < 0
+        run(stepper, update_hist, 1.0)
+        assert stepper.dir == Stepper.DIRECTION_CCW
+        assert stepper.position > 0
+        assert stepper.velocity < 0
 
-    fig, ax = plt.subplots()
-    ax.set_title('test_stepper')
-    ax.set_xlabel('Time (s)')
-    ax.set_ylabel('Position / Velocity')
-    ax.axhline(y=0, linewidth=1, color='w')
-    ax.plot(times, position_hist, label="position")
-    ax.plot(times, velocity_hist, label="velocity")
-    ax.legend()
-    fig.savefig('log/test_stepper.png', dpi=150)
+        run(stepper, update_hist, 1.0)
+        assert stepper.dir == Stepper.DIRECTION_CCW
+        assert stepper.position < 0
+        assert stepper.velocity < 0
+    except AssertionError as e:
+        plot()
+        raise e
+
+    plot()
+
