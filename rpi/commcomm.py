@@ -1,23 +1,16 @@
-from multiprocessing import Queue
 import re
+from rpi.client import CommClient
 
 class CommComm:
     def __init__(self):
-        self.queue_in  = Queue()
-        self.queue_out = Queue()
-
+        self.comm = CommClient()
         self.latest_msg = None
         self.latest_coord = (0, 0)
 
-    def get_args(self):
-        return self.queue_out, self.queue_in
-
     def run(self):
-        # TODO this is stupid
-        # Clear queue
-        while not self.queue_in.empty():
-            self.latest_msg = self.queue_in.get()
-            self._parse_msg()  # TODO shouldn't this just be part of a setter
+        self.latest_msg = self.comm.recv_msg()
+        #print(self.latest_msg)
+        self._parse_msg()  # TODO shouldn't this just be part of a setter
 
     def update(self, dt):
         pass
@@ -25,3 +18,4 @@ class CommComm:
     def _parse_msg(self):
         m = re.match(r'\((\d+\.?\d*),(\d+\.?\d*)\)', self.latest_msg).groups()
         self.latest_coord = (float(m[0]), float(m[1]))
+

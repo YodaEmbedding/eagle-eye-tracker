@@ -24,31 +24,31 @@ def run_motor_func(stepper):
             stepper.set_velocity_setpoint_rad(velocity_setpoint.value)
     return run_motor
 
-def run_comm_func(comm):
-    def run_comm(queue_in, queue_out):
-        while True:
-            msg = comm.recv_msg()
-            queue_out.put((msg))
-            if queue_in.empty():
-                continue
-            while not queue_in.empty():
-                msg = queue_in.get()
-            comm.send_msg(msg)
-    return run_comm
+#def run_comm_func(comm):
+#    def run_comm(queue_in, queue_out):
+#        while True:
+#            msg = comm.recv_msg()
+#            queue_out.put((msg))
+#            if queue_in.empty():
+#                continue
+#            while not queue_in.empty():
+#                msg = queue_in.get()
+#            comm.send_msg(msg)
+#    return run_comm
 
 if __name__ == '__main__':
     pi = pigpio.pi()
     if not pi.connected:
         exit()
-
+        
     steppers = [
-        Stepper(pi, 16, 20, 21, accel_max=1000, velocity_max=4000),
-        Stepper(pi, 13, 19, 26, accel_max=1000, velocity_max=4000)]
-
+        Stepper(pi, 16, 20, 21, accel_max=2500, velocity_max=5000),
+        Stepper(pi, 13, 19, 26, accel_max=2500, velocity_max=5000)]
+    
     # TODO adapter with CoordinateGenerator (which, btw, is a really terrible name)
     #comm = CommClient()
-    #comm_comm = CommComm()
-    coordinate_generator = CoordinateGenerator()
+    comm_comm = CommComm()
+    coordinate_generator = CoordinateGenerator(lambda: comm_comm.latest_coord)
 
     stepper_comms = [StepperComm(s.accel_max_rad, s.velocity_max_rad) for s in steppers]
     motor_phi = Motor(stepper_comms[0], bound_min=-0.5*math.pi, bound_max=0.5*math.pi)
@@ -72,8 +72,7 @@ if __name__ == '__main__':
 
     try:
         while True:
-            #comm_comm.run()
-
+            comm_comm.run()
             curr_time = time.perf_counter()
             mc_dt = curr_time - mc_prev_time
 
@@ -83,10 +82,13 @@ if __name__ == '__main__':
 
             for x in stepper_comms:
                 x.run()
-                print("Position: " + str(x.position))
-                print("Velocity: " + str(x.velocity))
-                print(x.velocity_setpoint) # Max velocity is always recommended as the setpoint by motion controller..is that expected?
+                #print("Position: " + str(x.position))
+                #print("Velocity: " + str(x.velocity))
 
     except KeyboardInterrupt:
         print("Exiting...")
-        pi.stop()
+    
+    finally:
+        steppers[0].enable_off()
+        steppers[1].enable_off()
+
