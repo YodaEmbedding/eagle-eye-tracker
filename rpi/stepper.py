@@ -7,8 +7,8 @@ import pigpio
 class Stepper:
     """Control stepper motor on Raspberry Pi."""
 
-    DIRECTION_CCW = 0
-    DIRECTION_CW = 1
+    DIRECTION_CCW = 1
+    DIRECTION_CW = 0
     STEPS_PER_REV = 51200.0
 
     def __init__(self, pigpiod, ena_pin, dir_pin, step_pin, accel_max, velocity_max):
@@ -29,8 +29,9 @@ class Stepper:
         self.acceleration = 1.0
         self.dir = Stepper.DIRECTION_CW
 
-        self.state = 0
+        self._is_initialized = False
         self.last_step_time = 0.0
+        self.last_run_time = 0.0
 
         self.pi.set_mode(self.step_pin, pigpio.OUTPUT)
         self.pi.set_mode(self.dir_pin, pigpio.OUTPUT)
@@ -56,14 +57,18 @@ class Stepper:
     def run(self):
         """Polling function that runs at most one step per call, none if step distance has not been reached."""
 
-        if self.state == 0:
-            self.last_step_time = time.perf_counter()
-            self.velocity = self.acceleration / 10.0
-            self.state = 1
+        if not self._is_initialized:
+            self.last_run_time = self.last_step_time = time.perf_counter()
+            self._is_initialized = True
+            return
 
         curr_time = time.perf_counter()
-        dt = curr_time - self.last_step_time
-        distance = abs(self.velocity * dt)
+        dt_run = curr_time - self.last_run_time
+        self.velocity = (min if self.acceleration > 0.0 else max)(self.velocity + self.acceleration * dt_run, self.velocity_setpoint)
+        self.last_run_time = curr_time
+
+        dt_step = curr_time - self.last_step_time
+        distance = abs(self.velocity * dt_step)
 
         # Step distance not reached
         if distance < 1.0:
@@ -78,7 +83,6 @@ class Stepper:
 
         self._step()
         self.last_step_time = curr_time
-        self.velocity = (min if self.acceleration > 0.0 else max)(self.velocity + self.acceleration * dt, self.velocity_setpoint)
 
     def set_velocity_setpoint_rad(self, velocity):
         """Set velocity that motors will accelerate/deaccelerate to, in radians."""
@@ -104,5 +108,8 @@ class Stepper:
         """Converts radians to steps."""
         steps = radians * Stepper.STEPS_PER_REV / (2 * math.pi)
         return steps
+    
+    def enable_off(self):
+        self.pi.write(self.ena_pin, 1)
 
 # TODO: drive faster! (switch modes?)
