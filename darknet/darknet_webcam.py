@@ -196,15 +196,15 @@ predict_image.restype = POINTER(c_float)
 
 def array_to_image(arr):
     import numpy as np
-     # need to return old values to avoid python freeing memory 
+     # need to return old values to avoid python freeing memory
     arr = arr.transpose(2,0,1)
     c = arr.shape[0]
-    h = arr.shape[1] 
-    w = arr.shape[2] 
-    arr = np.ascontiguousarray(arr.flat, dtype=np.float32) / 255.0 
-    data = arr.ctypes.data_as(POINTER(c_float)) 
-    im = IMAGE(w,h,c,data) 
-    return im, arr 
+    h = arr.shape[1]
+    w = arr.shape[2]
+    arr = np.ascontiguousarray(arr.flat, dtype=np.float32) / 255.0
+    data = arr.ctypes.data_as(POINTER(c_float))
+    im = IMAGE(w,h,c,data)
+    return im, arr
 
 def detect(net, meta, frame, thresh=.5, hier_thresh=.5, nms=.45):
     """
@@ -326,22 +326,32 @@ def performDetect(thresh= 0.25, configPath = "./cfg/yolov3.cfg", weightPath = "y
     capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 768)
     comm = CommServer()
 
+    def normalize_pixel(self, x, y, shape):
+        """Offset, scale, flip (x, y) within range [-1, 1] by max side"""
+        h, w = shape
+        scale = 2. / max(w, h)
+        x_ =  scale * (x - 0.5 * w)
+        y_ = -scale * (y - 0.5 * h)
+        return x_, y_
+
     while True:
         ret, frame = capture.read()
         # resized_frame= cv2.resize(frame, (lib.network_width(netMain), lib.network_height(netMain)), interpolation = cv2.INTER_LINEAR)
         res = detect(netMain, metaMain, frame)
         for i in res:
+            prob = i[1]
             x, y, w, h = i[2][0], i[2][1], i[2][2], i[2][3]
             xmin, ymin, xmax, ymax = convertBack(float(x), float(y), float(w), float(h))
             pt1 = (xmin, ymin)
             pt2 = (xmax, ymax)
             cv2.rectangle(frame, pt1, pt2, (0, 255, 0), 2)
             cv2.putText(frame, i[0] + " [" + str(round(i[1] * 100, 2)) + "]", (pt1[0], pt1[1] + 20), cv2.FONT_HERSHEY_SIMPLEX, 1, [0, 255, 0], 4)
-                
+
             if i[0] == "person":
                 cv2.circle(frame, (int(x), int(y)), 10, (0,0,255), -1)
                 print(x, y)
-                comm.send_msg("(" + str(x) + "," + str(y) + ")")
+                x_, y_ = normalize_pixel(x, y, frame.shape[0:2])
+                comm.send_msg(f"({prob:.3f},{x_:.3f},{y_:.3f})")
 
         cv2.imshow('frame', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
