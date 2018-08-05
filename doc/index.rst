@@ -10,7 +10,7 @@ Welcome to Eagle Eye Tracker's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-.. automodule:: simulation
+.. automodule:: tracker
 
 
 Indices and tables

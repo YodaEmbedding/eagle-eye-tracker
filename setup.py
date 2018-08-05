@@ -12,7 +12,7 @@ setup(
     description = "Eagle Eye Tracker",
     license = "MIT",
     keywords = "deeplearning tracking",
-    packages=['simulation', 'test', 'doc'],
+    packages=['tracker', 'test', 'doc'],
     long_description=read('README.md'),
     install_requires=[
         'numpy-quaternion',

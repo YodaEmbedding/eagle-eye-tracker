@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from simulation.worldstate import WorldState
+from tracker.worldstate import WorldState
 
 np.set_printoptions(precision=3)
 plt.style.use('dark_background')

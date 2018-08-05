@@ -1,6 +1,6 @@
 import pytest
 
-from simulation.latency import Latency
+from tracker.latency import Latency
 
 class FakeTime:
     def __init__(self):

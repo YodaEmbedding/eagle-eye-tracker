@@ -7,7 +7,7 @@ import numpy as np
 from matplotlib.animation import FuncAnimation
 from mpl_toolkits import mplot3d
 
-from simulation.worldstate import WorldState
+from tracker.worldstate import WorldState
 
 np.set_printoptions(precision=3)
 mpl.rcParams['toolbar'] = 'None'

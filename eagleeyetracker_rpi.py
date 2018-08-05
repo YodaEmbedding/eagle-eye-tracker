@@ -10,9 +10,9 @@ from rpi.commcomm import CommComm
 from rpi.stepper import Stepper
 from rpi.steppercomm import StepperComm
 
-from simulation.coordinategenerator import CoordinateGenerator
-from simulation.motioncontroller import MotionController
-from simulation.motor import Motor
+from tracker.coordinategenerator import CoordinateGenerator
+from tracker.motioncontroller import MotionController
+from tracker.motor import Motor
 
 # TODO might be cleaner to just put this inside stepper
 def run_motor_func(stepper):
@@ -40,11 +40,11 @@ if __name__ == '__main__':
     pi = pigpio.pi()
     if not pi.connected:
         exit()
-        
+
     steppers = [
         Stepper(pi, 16, 20, 21, accel_max=2500, velocity_max=5000),
         Stepper(pi, 13, 19, 26, accel_max=2500, velocity_max=5000)]
-    
+
     # TODO adapter with CoordinateGenerator (which, btw, is a really terrible name)
     #comm = CommClient()
     comm_comm = CommComm()
@@ -87,7 +87,7 @@ if __name__ == '__main__':
 
     except KeyboardInterrupt:
         print("Exiting...")
-    
+
     finally:
         steppers[0].enable_off()
         steppers[1].enable_off()

@@ -1,8 +1,8 @@
 import pytest
 from pytest import approx
 
-from simulation.motor import Motor
-from simulation.virtualmotor import VirtualMotor
+from tracker.motor import Motor
+from tracker.virtualmotor import VirtualMotor
 
 def test_motor_recommended_accel():
     motor = Motor(VirtualMotor(accel_max=1.0, velocity_max=2.0))
