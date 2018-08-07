@@ -7,7 +7,7 @@ class CommClient:
     PORT = 12345
     BUFFER_SIZE = 1024
 
-    def __init__(self):
+    def __init__(self, sock=None):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((CommClient.IP, CommClient.PORT))
         self.latest_msg = ""
