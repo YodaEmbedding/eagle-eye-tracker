@@ -34,8 +34,8 @@ if __name__ == '__main__':
         exit()
 
     steppers = [
-        Stepper(pi, 13, 19, 26, accel_max=1000, velocity_max=2000),
-        Stepper(pi, 16, 20, 21, accel_max=1000, velocity_max=2000)]
+        Stepper(pi, 13, 19, 26, accel_max=16000, velocity_max=4000),
+        Stepper(pi, 16, 20, 21, accel_max=16000, velocity_max=4000)]
 
     comm_comm = CommComm()
     coordinate_generator = CoordinateGenerator(lambda:
