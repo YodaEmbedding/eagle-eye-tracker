@@ -249,6 +249,7 @@ altNames = None
 
 def performDetect(thresh= 0.25, configPath = "./cfg/yolov3.cfg", weightPath = "yolov3.weights", metaPath= "./data/coco.data", showImage= True, makeImageOnly = False, initOnly= False):
     import cv2
+    import numpy as np
     """
     Convenience function to handle the detection and returns of objects.
 
@@ -320,19 +321,23 @@ def performDetect(thresh= 0.25, configPath = "./cfg/yolov3.cfg", weightPath = "y
         return None
 
     # Get webcam video with OpenCV
-    capture = cv2.VideoCapture(0)
+    capture = cv2.VideoCapture(1)
     print(capture.get(cv2.CAP_PROP_FPS))
     capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1024)
     capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 768)
     comm = CommServer()
 
-    def normalize_pixel(self, x, y, shape):
-        """Offset, scale, flip (x, y) within range [-1, 1] by max side"""
+    def normalize_pixel(x, y, shape):
+        """Offset, scale, flip (x, y) within range [-1, 1]"""
         h, w = shape
-        scale = 2. / max(w, h)
-        x_ =  scale * (x - 0.5 * w)
-        y_ = -scale * (y - 0.5 * h)
+        # scale = 2. / max(w, h)
+        # x_ =  scale * (x - 0.5 * w)
+        # y_ = -scale * (y - 0.5 * h)
+        x_ =   2. / w * (x - 0.5 * w)
+        y_ =  -2. / h * (y - 0.5 * h)
         return x_, y_
+
+    prev = np.array([0., 0.])
 
     while True:
         ret, frame = capture.read()
@@ -347,11 +352,32 @@ def performDetect(thresh= 0.25, configPath = "./cfg/yolov3.cfg", weightPath = "y
             cv2.rectangle(frame, pt1, pt2, (0, 255, 0), 2)
             cv2.putText(frame, i[0] + " [" + str(round(i[1] * 100, 2)) + "]", (pt1[0], pt1[1] + 20), cv2.FONT_HERSHEY_SIMPLEX, 1, [0, 255, 0], 4)
 
-            if i[0] == "person":
-                cv2.circle(frame, (int(x), int(y)), 10, (0,0,255), -1)
-                print(x, y)
-                x_, y_ = normalize_pixel(x, y, frame.shape[0:2])
-                comm.send_msg(f"({prob:.3f},{x_:.3f},{y_:.3f})")
+        def dist(r):
+            name, prob, (x, y, w, h) = r
+            curr = np.array([x, y])
+            return np.linalg.norm(curr - prev)
+
+        def construct_msg(res, obj_name):
+            interesting = [r for r in res if r[0] == obj_name]
+
+            if len(interesting) == 0:
+                # return "(None)"
+                return "(0,0,0)"
+
+            closest = min(interesting, key=dist)
+            name, prob, (x, y, w, h) = closest
+            prev = np.array([x, y])
+
+            cv2.circle(frame, (int(x), int(y)), 10, (0,0,255), -1)
+            #print(x, y)
+            x_, y_ = normalize_pixel(x, y, frame.shape[0:2])
+
+            return f"({prob:.3f},{x_:.3f},{y_:.3f})"
+
+        msg = construct_msg(res, "bottle")
+        #msg = "(1, 0.0, -1.0)"
+        print(msg)
+        comm.send_msg(msg)
 
         cv2.imshow('frame', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):

@@ -1,7 +1,7 @@
 import socket
 
 class CommServer:
-    IP = '169.254.203.248'  # ethernet
+    IP = '169.254.171.204'  # ethernet
     #IP = '192.168.1.122'   # wifi
     PORT = 12345
     BUFFER_SIZE = 1024
