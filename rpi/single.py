@@ -1,3 +1,5 @@
+from time import perf_counter
+
 import pigpio
 
 from stepper import Stepper
@@ -11,26 +13,26 @@ try:
     #   stepper.set_velocity_setpoint(-1000)
     #   stepper.set_acceleration(500)
     stepper = Stepper(pi, 16, 20, 21, 2000, 5000)
-    stepper.set_velocity_setpoint(4000)
     state = 0
     #stepper2 = Stepper(pi, 13, 19, 26)
     #stepper2.set_velocity_setpoint(4000)
 
+    pairs = [
+        (1000, 1), 
+        (0, 5)]
+
+    prev_time = perf_counter()
+
     while True:
-        #if state == 0 and stepper.velocity == 4000:
-        #    stepper.set_velocity_setpoint(-4000)
-        #    state = 1
-        #if state == 1 and stepper.velocity == -4000:
-        #    stepper.set_velocity_setpoint(4000)
-        #    state = 2
-        #if state == 2 and stepper.velocity == 4000:
-        #    stepper.set_velocity_setpoint(-4000)
-        #    state = 3
-        #if state == 3 and stepper.velocity == -4000:
-        #    stepper.set_velocity_setpoint(4000)
-        #    state = 4
+        v, t = pairs[state % len(pairs)]
+        stepper.set_velocity_setpoint(v)
+
+        curr_time = perf_counter()
+        if curr_time - prev_time >= t:
+            state += 1
+            prev_time = curr_time
+
         stepper.run()
-        #stepper2.run()
 
 except KeyboardInterrupt:
     print("\nExiting...")

@@ -24,17 +24,9 @@ def run_motor_func(stepper):
             stepper.set_velocity_setpoint_rad(velocity_setpoint.value)
     return run_motor
 
-#def run_comm_func(comm):
-#    def run_comm(queue_in, queue_out):
-#        while True:
-#            msg = comm.recv_msg()
-#            queue_out.put((msg))
-#            if queue_in.empty():
-#                continue
-#            while not queue_in.empty():
-#                msg = queue_in.get()
-#            comm.send_msg(msg)
-#    return run_comm
+def run_comm(comm_comm):
+    while True:
+        comm_comm.run()
 
 if __name__ == '__main__':
     pi = pigpio.pi()
@@ -45,10 +37,9 @@ if __name__ == '__main__':
         Stepper(pi, 13, 19, 26, accel_max=1000, velocity_max=2000),
         Stepper(pi, 16, 20, 21, accel_max=1000, velocity_max=2000)]
 
-    # TODO adapter with CoordinateGenerator (which, btw, is a really terrible name)
-    #comm = CommClient()
     comm_comm = CommComm()
-    coordinate_generator = CoordinateGenerator(lambda: comm_comm.latest_coord)
+    coordinate_generator = CoordinateGenerator(lambda:
+        (comm_comm.latest_coord_x_s.value, comm_comm.latest_coord_y_s.value))
 
     stepper_comms = [StepperComm(s.accel_max_rad, s.velocity_max_rad) for s in steppers]
     motor_phi = Motor(stepper_comms[0], direction=1,  bound_min=-0.3*math.pi, bound_max=0.3*math.pi)
@@ -57,13 +48,10 @@ if __name__ == '__main__':
     motion_controller = MotionController(coordinate_generator,
         motor_phi, motor_th)
 
-    #processes = (
-    #    [Process(target=run_motor_func(s), args=sc.get_args())
-    #       for s, sc in zip(steppers, stepper_comms)] +
-    #    [Process(target=run_comm_func(comm), args=comm_comm.get_args())])
-
-    processes = [Process(target=run_motor_func(s), args=sc.get_args())
-            for s, sc in zip(steppers, stepper_comms)]
+    processes = (
+        [Process(target=run_motor_func(s), args=sc.get_args())
+           for s, sc in zip(steppers, stepper_comms)] +
+        [Process(target=run_comm, args=(comm_comm,))])
 
     for p in processes:
         p.start()
@@ -72,7 +60,6 @@ if __name__ == '__main__':
 
     try:
         while True:
-            comm_comm.run()
             curr_time = time.perf_counter()
             mc_dt = curr_time - mc_prev_time
 
@@ -82,8 +69,6 @@ if __name__ == '__main__':
 
             for x in stepper_comms:
                 x.run()
-                #print("Position: " + str(x.position))
-                #print("Velocity: " + str(x.velocity))
 
     except KeyboardInterrupt:
         print("Exiting...")
@@ -91,4 +76,3 @@ if __name__ == '__main__':
     finally:
         steppers[0].enable_off()
         steppers[1].enable_off()
-

@@ -1,3 +1,4 @@
+import re
 import socket
 
 class CommClient:
@@ -9,16 +10,30 @@ class CommClient:
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((CommClient.IP, CommClient.PORT))
+        self.latest_msg = ""
+        self.latest_prob  = 0.0
+        self.latest_coord = (0.0, 0.0)
 
     def close(self):
         self.sock.close()
 
     def recv_msg(self):
-        msg = self.sock.recv(CommClient.BUFFER_SIZE).decode()
-        return msg
+        self.latest_msg = self.sock.recv(CommClient.BUFFER_SIZE).decode()
+        self._parse_msg()
+        return self.latest_msg
 
     def send_msg(self, msg):
         self.sock.send(msg.encode())
+
+    def _parse_msg(self):
+        """Parses string of form (prob,x,y)"""
+        # TODO handle illegal format?
+        n = r'(\-?\d+\.?\d*)'
+        regex = r'\({},\s*{},\s*{}\)'.format(n, n, n)
+        matches = re.match(regex, self.latest_msg).groups()
+        t = tuple(map(float, matches))
+        self.latest_prob = t[0]
+        self.latest_coord = t[1:3]
 
 if __name__ == "__main__":
     import time
