@@ -321,10 +321,10 @@ def performDetect(thresh= 0.25, configPath = "./cfg/yolov3.cfg", weightPath = "y
         return None
 
     # Get webcam video with OpenCV
-    capture = cv2.VideoCapture(1)
-    print(capture.get(cv2.CAP_PROP_FPS))
-    capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1024)
-    capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 768)
+    capture = cv2.VideoCapture(0)
+    print(f"FPS: {capture.get(cv2.CAP_PROP_FPS)}")
+    # capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1024)
+    # capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 768)
     comm = CommServer()
 
     def normalize_pixel(x, y, shape):
@@ -341,6 +341,7 @@ def performDetect(thresh= 0.25, configPath = "./cfg/yolov3.cfg", weightPath = "y
 
     while True:
         ret, frame = capture.read()
+
         # resized_frame= cv2.resize(frame, (lib.network_width(netMain), lib.network_height(netMain)), interpolation = cv2.INTER_LINEAR)
         res = detect(netMain, metaMain, frame)
         for i in res:
