@@ -7,8 +7,8 @@ import pigpio
 class Stepper:
     """Control stepper motor on Raspberry Pi."""
 
-    DIRECTION_CCW = 1
-    DIRECTION_CW = 0
+    DIRECTION_CCW = 0
+    DIRECTION_CW = 1
     STEPS_PER_REV = 51200.0
 
     def __init__(self, pigpiod, ena_pin, dir_pin, step_pin, accel_max, velocity_max):
@@ -95,7 +95,7 @@ class Stepper:
     def _step(self):
         """Performs a step with pulse of minimal width."""
         self.pi.write(self.dir_pin, self.dir)
-        self.pi.gpio_trigger(self.step_pin, 20, 1)
+        self.pi.gpio_trigger(self.step_pin, 50, 1)
 
     def _to_radians(self, steps):
         """Converts steps to radians based on step size of motor driver."""

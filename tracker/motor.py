@@ -5,18 +5,19 @@ from .coordinatemath import shortest_rad
 class Motor:
     """Provides interface with virtual or physical motor and other useful functionality"""
 
-    def __init__(self, motor, bound_min=-np.inf, bound_max=np.inf):
+    def __init__(self, motor, direction=1, bound_min=-np.inf, bound_max=np.inf):
         self.motor = motor
         self.bound_min = bound_min
         self.bound_max = bound_max
+        self.direction = direction
 
     @property
     def position(self):
-        return self.motor.position
+        return self.direction * self.motor.position
 
     @property
     def velocity(self):
-        return self.motor.velocity
+        return self.direction * self.motor.velocity
 
     @property
     def accel_max(self):
@@ -49,7 +50,7 @@ class Motor:
             self.velocity_max)
 
     def set_velocity_setpoint(self, velocity_setpoint):
-        self.motor.set_velocity_setpoint(velocity_setpoint)
+        self.motor.set_velocity_setpoint(self.direction * velocity_setpoint)
 
     def to_nearest_angle(self, angle):
         delta = shortest_rad(self.position, angle)

@@ -42,8 +42,8 @@ if __name__ == '__main__':
         exit()
 
     steppers = [
-        Stepper(pi, 16, 20, 21, accel_max=2500, velocity_max=5000),
-        Stepper(pi, 13, 19, 26, accel_max=2500, velocity_max=5000)]
+        Stepper(pi, 13, 19, 26, accel_max=1000, velocity_max=2000),
+        Stepper(pi, 16, 20, 21, accel_max=1000, velocity_max=2000)]
 
     # TODO adapter with CoordinateGenerator (which, btw, is a really terrible name)
     #comm = CommClient()
@@ -51,8 +51,8 @@ if __name__ == '__main__':
     coordinate_generator = CoordinateGenerator(lambda: comm_comm.latest_coord)
 
     stepper_comms = [StepperComm(s.accel_max_rad, s.velocity_max_rad) for s in steppers]
-    motor_phi = Motor(stepper_comms[0], bound_min=-0.5*math.pi, bound_max=0.5*math.pi)
-    motor_th  = Motor(stepper_comms[1], bound_min=-0.5*math.pi, bound_max=0.0)
+    motor_phi = Motor(stepper_comms[0], direction=1,  bound_min=-0.3*math.pi, bound_max=0.3*math.pi)
+    motor_th  = Motor(stepper_comms[1], direction=-1, bound_min=-0.3*math.pi, bound_max=0.0)
 
     motion_controller = MotionController(coordinate_generator,
         motor_phi, motor_th)
