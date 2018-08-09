@@ -16,6 +16,9 @@ class CommComm:
         self.latest_coord_x_s.value = self.comm.latest_coord[0]
         self.latest_coord_y_s.value = self.comm.latest_coord[1]
 
+        if not self.comm.connected:
+            self.comm.connect()
+
     def update(self, dt):
         pass
 

@@ -1,5 +1,6 @@
 import re
 import socket
+from time import sleep
 
 class CommClient:
     IP = '169.254.171.204'  # ethernet
@@ -8,22 +9,39 @@ class CommClient:
     BUFFER_SIZE = 1024
 
     def __init__(self, sock=None):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((CommClient.IP, CommClient.PORT))
         self.latest_msg = ""
         self.latest_prob  = 0.0
         self.latest_coord = (0.0, 0.0)
+        self.sock = None
+        self.connected = False
+        self.connect() 
 
     def close(self):
         self.sock.close()
 
     def recv_msg(self):
         self.latest_msg = self.sock.recv(CommClient.BUFFER_SIZE).decode()
+        if not self.latest_msg:
+            print("Disconnected.")
+            self.latest_msg = "(0.0,0.0,0.0)"
+            self.connected = False
         self._parse_msg()
-        return self.latest_msg
 
     def send_msg(self, msg):
         self.sock.send(msg.encode())
+
+    def connect(self):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        while True:
+            try:
+                print("Connecting...")
+                self.sock.connect((CommClient.IP, CommClient.PORT))
+                print("Connected.")
+                self.connected = True
+                break
+            except socket.error:
+                print("Connection failed.")
+                sleep(1)
 
     def _parse_msg(self):
         """Parses string of form (prob,x,y)"""

@@ -29,6 +29,8 @@ def run_comm(comm_comm):
         comm_comm.run()
 
 if __name__ == '__main__':
+    comm_comm = CommComm()
+
     pi = pigpio.pi()
     if not pi.connected:
         exit()
@@ -37,7 +39,6 @@ if __name__ == '__main__':
         Stepper(pi, 13, 19, 26, accel_max=16000, velocity_max=4000),
         Stepper(pi, 16, 20, 21, accel_max=16000, velocity_max=4000)]
 
-    comm_comm = CommComm()
     coordinate_generator = CoordinateGenerator(lambda:
         (comm_comm.latest_coord_x_s.value, comm_comm.latest_coord_y_s.value))
 
