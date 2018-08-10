@@ -32,6 +32,7 @@ import math
 import random
 import os
 from server import CommServer
+import argparse
 
 def sample(probs):
     s = sum(probs)
@@ -247,7 +248,7 @@ netMain = None
 metaMain = None
 altNames = None
 
-def performDetect(thresh= 0.25, configPath = "./cfg/yolov3.cfg", weightPath = "yolov3.weights", metaPath= "./data/coco.data", showImage= True, makeImageOnly = False, initOnly= False):
+def performDetect(thresh= 0.25, configPath = "./cfg/yolov3.cfg", weightPath = "yolov3.weights", metaPath= "./data/coco.data", showImage= True, makeImageOnly = False, initOnly= False, objectType=None):
     import cv2
     import numpy as np
     """
@@ -375,7 +376,7 @@ def performDetect(thresh= 0.25, configPath = "./cfg/yolov3.cfg", weightPath = "y
 
             return f"({prob:.3f},{x_:.3f},{y_:.3f})"
 
-        msg = construct_msg(res, "bottle")
+        msg = construct_msg(res, objectType)
         #msg = "(1, 0.0, -1.0)"
         print(msg)
         comm.send_msg(msg)
@@ -389,4 +390,8 @@ def performDetect(thresh= 0.25, configPath = "./cfg/yolov3.cfg", weightPath = "y
     comm.close()
 
 if __name__ == "__main__":
-    print(performDetect())
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--object', nargs='?', const="bottle", default="bottle", help='Object to track')
+    args = parser.parse_args()
+    print(args.object)
+    print(performDetect(objectType=args.object))
