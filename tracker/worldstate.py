@@ -13,16 +13,22 @@ class WorldState:
     def __init__(self):
         self.coord_gen = CoordinateGenerator()
         self.latent_coord_gen = LatentCoordinateGenerator(self.coord_gen)
-        motor_phi = Motor(VirtualMotor(accel_max=1.5, velocity_max=3.0),
+
+        # Stepper.STEPS_PER_REV = 51200
+        motor_phi = Motor(VirtualMotor(accel_max=1.96, velocity_max=0.49),
             bound_min=-np.inf, bound_max=np.inf)
-            # bound_min=-0.5*np.pi, bound_max=0.5*np.pi)
-        motor_th  = Motor(VirtualMotor(accel_max=1.5, velocity_max=3.0),
+        motor_th  = Motor(VirtualMotor(accel_max=1.96, velocity_max=0.49),
             bound_min=-0.5*np.pi, bound_max=0.0)
 
         self.motion_controller = MotionController(self.latent_coord_gen,
             motor_phi, motor_th)
-        self.error_history = RingBuffer(capacity=512, dtype=np.float32)
-        self.error_history.extend(np.zeros(512))
+
+        capacity = 512
+        self.error_history = RingBuffer(capacity=capacity, dtype=np.float32)
+        self.error_history_latent = RingBuffer(capacity=capacity,
+            dtype=np.float32)
+        self.error_history.extend(np.zeros(capacity))
+        self.error_history_latent.extend(np.zeros(capacity))
 
     def draw_3d(self, ax):
         origin = np.zeros((1, 3))
@@ -44,8 +50,13 @@ class WorldState:
     def draw_error(self, ax):
         x = np.arange(len(self.error_history))
         y = np.array(self.error_history)
+
+        x_l = np.arange(len(self.error_history_latent))
+        y_l = np.array(self.error_history_latent)
+
         ax.clear()
-        ax.plot(x, y)
+        ax.plot(x,   y,   color="#ff55bb")
+        ax.plot(x_l, y_l, color="#772255")
         ax.axis('off')
         ax.grid(False)
         ax.set_title('Error', position=(0.5, 0.9))
@@ -55,5 +66,7 @@ class WorldState:
 
     def update(self, dt):
         self.motion_controller.update(dt)
-        error = np.linalg.norm(self.coord_gen.coord)
+        error   = np.linalg.norm(self.coord_gen.coord)
+        error_l = np.linalg.norm(self.latent_coord_gen.coord)
         self.error_history.append(error)
+        self.error_history_latent.append(error_l)
