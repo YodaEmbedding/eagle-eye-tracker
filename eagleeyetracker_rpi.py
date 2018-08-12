@@ -9,6 +9,7 @@ from rpi.client import CommClient
 from rpi.commcomm import CommComm
 from rpi.stepper import Stepper
 from rpi.steppercomm import StepperComm
+from rpi.laser import Laser
 
 from tracker.coordinategenerator import CoordinateGenerator
 from tracker.motioncontroller import MotionController
@@ -29,12 +30,14 @@ def run_comm(comm_comm):
         comm_comm.run()
 
 if __name__ == '__main__':
-    comm_comm = CommComm()
 
     pi = pigpio.pi()
     if not pi.connected:
         exit()
 
+    laser = Laser(pi, 23)
+    laser.laser_off()
+    comm_comm = CommComm()
     steppers = [
         Stepper(pi, 13, 19, 26, accel_max=16000, velocity_max=4000),
         Stepper(pi, 16, 20, 21, accel_max=16000, velocity_max=4000)]
@@ -59,6 +62,7 @@ if __name__ == '__main__':
 
     mc_prev_time = time.perf_counter()
 
+    laser.laser_on()
     try:
         while True:
             curr_time = time.perf_counter()
@@ -77,3 +81,4 @@ if __name__ == '__main__':
     finally:
         steppers[0].enable_off()
         steppers[1].enable_off()
+        laser.laser_off()

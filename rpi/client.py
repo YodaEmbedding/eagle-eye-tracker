@@ -20,11 +20,12 @@ class CommClient:
         self.sock.close()
 
     def recv_msg(self):
-        self.latest_msg = self.sock.recv(CommClient.BUFFER_SIZE).decode()
-        if not self.latest_msg:
-            print("Disconnected.")
-            self.latest_msg = "(0.0,0.0,0.0)"
-            self.connected = False
+        try:
+            self.latest_msg = self.sock.recv(CommClient.BUFFER_SIZE).decode()
+            if not self.latest_msg:
+                self._set_disconnect()
+        except socket.error:
+            self._set_disconnect()
         self._parse_msg()
 
     def send_msg(self, msg):
@@ -42,6 +43,11 @@ class CommClient:
             except socket.error:
                 print("Connection failed.")
                 sleep(1)
+
+    def _set_disconnect(self):
+        print("Disconnected.")
+        self.latest_msg = "(0.0,0.0,0.0)"
+        self.connected = False
 
     def _parse_msg(self):
         """Parses string of form (prob,x,y)"""
