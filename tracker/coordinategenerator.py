@@ -59,23 +59,29 @@ class CoordinateGenerator:
         self.coord = tuple(coord)
 
 class LatentCoordinateGenerator(CoordinateGenerator):
-    coord = Latency(0.05, time.perf_counter)
+    COORD_LATENCY = 0.100
+    coord = Latency(COORD_LATENCY)
 
     def __init__(self, parent, fps=20):
         self.parent = parent
         self.fps = fps
-        self.prev_time = 0.0
+        self.time_elapsed = 0.0
+        self.time_since_update = 0.0
         super().__init__(lambda: self.parent.coord)
 
     def update(self, dt, rot, update_coord=True):
         self.parent.update(dt, rot)
-        curr_time = time.perf_counter()
-        update_coord = (curr_time - self.prev_time) >= (1. / self.fps)
+        self.time_elapsed += dt
+        self.time_since_update += dt
+        update_coord = (self.time_since_update >= 1. / self.fps)
         if update_coord:
-            self.prev_time = curr_time
+            self.time_since_update %= 1. / self.fps
         super().update(dt, rot, update_coord)
 
     def draw(self, ax, color="#ff55bb"):
         """Draw a coordinate at location in image frame."""
         super().draw(ax, color="#772255")  # color="#ffbb55")
         self.parent.draw(ax)
+
+    def _time_func(self):
+        return self.time_elapsed

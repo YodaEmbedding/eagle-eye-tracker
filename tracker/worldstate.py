@@ -8,6 +8,8 @@ from .motor import Motor
 from .virtualmotor import VirtualMotor
 
 class WorldState:
+    """Keeps track of all simulated worldy elements."""
+
     def __init__(self):
         self.coord_gen = CoordinateGenerator()
         self.latent_coord_gen = LatentCoordinateGenerator(self.coord_gen)

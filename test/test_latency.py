@@ -16,9 +16,11 @@ def test_latency():
     time = FakeTime()
 
     class Latent:
-        obj = Latency(0.1, time.time)
+        obj = Latency(0.1)
         def __init__(self):
             self.obj = 0
+        def _time_func(self):
+            return time.time()
     latent = Latent()
 
     # Slow update test
