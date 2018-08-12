@@ -31,7 +31,7 @@ ax_3d.view_init(elev=0., azim=0.)
 state = WorldState()
 
 def update(frame_number):
-    state.update()
+    state.update(dt=50/1000)
     state.draw_3d(ax_3d)
     state.draw_error(ax_error)
 

@@ -1,7 +1,10 @@
+import time
+
 import numpy as np
 import quaternion
 
 from .coordinatemath import (apply_rotation, pos_quats_to_plot_coords)
+from .latency import Latency
 from .testpaths import test_paths
 
 # TODO modify actual coordinate generator to send between [-1,1] [-1,1] for x, y
@@ -11,19 +14,16 @@ class CoordinateGenerator:
 
     def __init__(self, coord_getter_func=None):
         self.coord_getter_func = coord_getter_func
-
         self.coord = (0.0, 0.0)
-
-        # TODO measure
-        self.width  = 0.4
-        self.height = 0.3
+        self.width  = 0.55
+        self.height = 0.4
 
         self.update(0, quaternion.x, False)
 
-    def draw(self, ax):
+    def draw(self, ax, color="#ff55bb"):
         """Draw a coordinate at location in image frame."""
         ax.scatter3D(*pos_quats_to_plot_coords([self._draw_quat]),
-            s=50, color="#ff55bb")
+            s=50, color=color)
 
     def update(self, dt, rot, update_coord=True):
         """Updates generated coordinate.
@@ -46,6 +46,7 @@ class CoordinateGenerator:
 
     def _update_coord(self, dt, rot):
         """Calculates next coord from coord_getter_func or path."""
+
         if self.coord_getter_func is not None:
             self.coord = self.coord_getter_func()
             return
@@ -56,3 +57,25 @@ class CoordinateGenerator:
             -offset.y / self.width,
              offset.z / self.height], -1., 1.)
         self.coord = tuple(coord)
+
+class LatentCoordinateGenerator(CoordinateGenerator):
+    coord = Latency(0.05, time.perf_counter)
+
+    def __init__(self, parent, fps=20):
+        self.parent = parent
+        self.fps = fps
+        self.prev_time = 0.0
+        super().__init__(lambda: self.parent.coord)
+
+    def update(self, dt, rot, update_coord=True):
+        self.parent.update(dt, rot)
+        curr_time = time.perf_counter()
+        update_coord = (curr_time - self.prev_time) >= (1. / self.fps)
+        if update_coord:
+            self.prev_time = curr_time
+        super().update(dt, rot, update_coord)
+
+    def draw(self, ax, color="#ff55bb"):
+        """Draw a coordinate at location in image frame."""
+        super().draw(ax, color="#772255")  # color="#ffbb55")
+        self.parent.draw(ax)

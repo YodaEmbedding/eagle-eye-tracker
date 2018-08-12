@@ -1,7 +1,7 @@
 import numpy as np
 from numpy_ringbuffer import RingBuffer
 
-from .coordinategenerator import CoordinateGenerator
+from .coordinategenerator import CoordinateGenerator, LatentCoordinateGenerator
 from .drawutils import draw_sphere, set_axes_radius
 from .motioncontroller import MotionController
 from .motor import Motor
@@ -9,17 +9,18 @@ from .virtualmotor import VirtualMotor
 
 class WorldState:
     def __init__(self):
-        coordinate_generator = CoordinateGenerator()
+        self.coord_gen = CoordinateGenerator()
+        self.latent_coord_gen = LatentCoordinateGenerator(self.coord_gen)
         motor_phi = Motor(VirtualMotor(accel_max=1.5, velocity_max=3.0),
             bound_min=-np.inf, bound_max=np.inf)
             # bound_min=-0.5*np.pi, bound_max=0.5*np.pi)
         motor_th  = Motor(VirtualMotor(accel_max=1.5, velocity_max=3.0),
             bound_min=-0.5*np.pi, bound_max=0.0)
 
-        self.motion_controller = MotionController(coordinate_generator,
+        self.motion_controller = MotionController(self.latent_coord_gen,
             motor_phi, motor_th)
-        self.error_history = RingBuffer(capacity=255, dtype=np.float32)
-        self.error_history.extend(np.zeros(255))
+        self.error_history = RingBuffer(capacity=512, dtype=np.float32)
+        self.error_history.extend(np.zeros(512))
 
     def draw_3d(self, ax):
         origin = np.zeros((1, 3))
@@ -50,8 +51,7 @@ class WorldState:
         ax.set_ylabel('y')
         ax.set_ylim([0, 1.42])
 
-    def update(self):
-        dt = 50 / 1000
+    def update(self, dt):
         self.motion_controller.update(dt)
-        error = np.linalg.norm(self.motion_controller.coordinate_generator.coord)
+        error = np.linalg.norm(self.coord_gen.coord)
         self.error_history.append(error)
