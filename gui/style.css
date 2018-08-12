@@ -74,12 +74,13 @@ nav {
   /* margin-left: 40%; */
 }
 
-.status-false {
+.status-tracker {
   background: #955;
-  border-bottom: 1px solid #a66;
-  border-top: 1px solid #a66;
-  color: #ecc;
+  border-bottom: 1px solid #808080;
+  border-top: 1px solid #808080;
+  color: #ffffff;
   padding: 0.5em;
+  font-size: large;
 }
 
 .status-panel {

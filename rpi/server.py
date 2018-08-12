@@ -9,8 +9,11 @@ class CommServer:
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((CommServer.IP, CommServer.PORT))
+        print("Listening on address: " + CommServer.IP)
         self.sock.listen(1)
+        print("Waiting for connection...")
         self.conn, self.addr = self.sock.accept()
+        print("Connection accepted.")
 
     def close(self):
         self.conn.close()
@@ -34,3 +37,4 @@ if __name__ == "__main__":
         comm.send_msg(msg)
 
     comm.close()
+

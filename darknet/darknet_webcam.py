@@ -33,6 +33,8 @@ import random
 import os
 from server import CommServer
 import argparse
+import signal
+import sys
 
 def sample(probs):
     s = sum(probs)
@@ -284,6 +286,7 @@ def performDetect(thresh= 0.25, configPath = "./cfg/yolov3.cfg", weightPath = "y
 
     """
     # Import the global variables. This lets us instance Darknet once, then just call performDetect() again without instancing again
+    print("Connecting...")
     global metaMain, netMain, altNames
     assert 0 < thresh < 1, "Threshold should be a float between zero and one (non-inclusive)"
     if not os.path.exists(configPath):
@@ -327,6 +330,16 @@ def performDetect(thresh= 0.25, configPath = "./cfg/yolov3.cfg", weightPath = "y
     # capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1024)
     # capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 768)
     comm = CommServer()
+
+    def handler(signum, frame):
+        capture.release()
+        cv2.destroyAllWindows()
+        comm.close()
+        print("BYE")
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, handler)
+    print("Connected!")
 
     def normalize_pixel(x, y, shape):
         """Offset, scale, flip (x, y) within range [-1, 1]"""
@@ -384,10 +397,6 @@ def performDetect(thresh= 0.25, configPath = "./cfg/yolov3.cfg", weightPath = "y
         cv2.imshow('frame', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-
-    capture.release()
-    cv2.destroyAllWindows()
-    comm.close()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
