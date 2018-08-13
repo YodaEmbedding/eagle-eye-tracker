@@ -89,7 +89,8 @@ class MotionController:
         #         to point without overshoot
 
     def _predict_state(self):
-        self.dest_quat_predict = quaternion.slerp_evaluate(
-            self.prev_dest_quat, self.dest_quat, 4.0)
-
+        # TODO WRONG. Doesn't do anything useful when dt is small
         # TODO dest_quat_vel
+
+        self.dest_quat_predict = quaternion.slerp_evaluate(
+            self.prev_dest_quat, self.dest_quat, 1.0)

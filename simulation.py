@@ -35,9 +35,10 @@ def update(frame_number):
     state.draw_3d(ax_3d)
     state.draw_error(ax_error)
 
-ani = FuncAnimation(fig, update, 65536, interval=50, blit=False)
-
+# ani = FuncAnimation(fig, update, 800, interval=50, blit=False)
 # ani.save('animation.mp4', fps=20, dpi=100)
+
+ani = FuncAnimation(fig, update, 65536, interval=50, blit=False)
 plt.show()
 
 # TODO
