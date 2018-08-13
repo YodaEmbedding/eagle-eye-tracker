@@ -25,6 +25,11 @@ class CoordinateGenerator:
         ax.scatter3D(*pos_quats_to_plot_coords([self._draw_quat]),
             s=50, color=color)
 
+    def draw_quat(self, ax, color="#ff55bb"):
+        """Draw destination on sphere."""
+        ax.scatter3D(*pos_quats_to_plot_coords([self.dest_quat]),
+            s=50, color=color)
+
     def update(self, dt, rot, update_coord=True):
         """Updates generated coordinate.
 
@@ -78,10 +83,15 @@ class LatentCoordinateGenerator(CoordinateGenerator):
             self.time_since_update %= 1. / self.fps
         super().update(dt, rot, update_coord)
 
-    def draw(self, ax, color="#ff55bb"):
+    def draw(self, ax, color="#772255"):
         """Draw a coordinate at location in image frame."""
-        super().draw(ax, color="#772255")
+        super().draw(ax, color)
         self.parent.draw(ax)
+
+    def draw_quat(self, ax, color="#772255"):
+        """Draw destination on sphere."""
+        super().draw_quat(ax, color)
+        self.parent.draw_quat(ax)
 
     def _time_func(self):
         return self.time_elapsed

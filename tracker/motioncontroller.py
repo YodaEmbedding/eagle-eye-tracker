@@ -46,10 +46,10 @@ class MotionController:
     def draw(self, ax):
         """Draw tracker camera."""
         ax.plot3D(*pos_quats_to_plot_coords(self.rect_drawable),
-            color='#55bbff')
-        ax.scatter3D(*pos_quats_to_plot_coords([self.dest_quat]),
-            s=50, color='#ffffff')
-        self.coordinate_generator.draw(ax)
+            color="#55bbff")
+        self.coordinate_generator.draw_quat(ax)
+
+        # TODO plot predicted?
 
     def update(self, dt):
         self.motor_phi.update(dt)
