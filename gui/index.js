@@ -5,6 +5,7 @@ let win
 function createWindow() {
   win = new BrowserWindow({width: 500, height: 650, icon:'assets/icon.png'})
   win.loadFile('index.html')
+  win.setPosition(1100, 200)
   // win.webContents.openDevTools()
   win.on('closed', () => {
     win = null
