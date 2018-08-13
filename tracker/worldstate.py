@@ -1,6 +1,5 @@
 import numpy as np
 from numpy_ringbuffer import RingBuffer
-import quaternion
 
 from .coordinategenerator import CoordinateGenerator, LatentCoordinateGenerator
 from .drawutils import draw_sphere, set_axes_radius
@@ -74,12 +73,5 @@ class WorldState:
         self.error_history.append(error)
         self.error_history_latent.append(error_l)
 
-        # c   = tuple(float(f"{x:.2f}") for x in self.coord_gen.coord)
-        # c_l = tuple(float(f"{x:.2f}") for x in self.latent_coord_gen.coord)
-        # print(f"{c}; {c_l}")
-        # print(error, error_l)
-
     def _calc_error(self, q):
-        return quaternion.rotation_intrinsic_distance(
-            self.motion_controller.curr_quat, q)
-
+        return self.motion_controller.calc_error(q)

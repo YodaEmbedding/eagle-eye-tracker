@@ -43,6 +43,9 @@ class MotionController:
         self.rect_drawable = apply_rotation(self._rect_drawable_orig,
             self.curr_rot)
 
+    def calc_error(self, q):
+        return quaternion.rotation_intrinsic_distance(self.curr_quat, q)
+
     def draw(self, ax):
         """Draw tracker camera."""
         ax.plot3D(*pos_quats_to_plot_coords(self.rect_drawable),
@@ -81,10 +84,17 @@ class MotionController:
 
         # curr = pos_quat_to_euler(self.curr_quat)
         dest = pos_quat_to_euler(self.dest_quat_predict)
+        error = self.calc_error(self.dest_quat_predict)
+        # TODO error should be computed for phi, th axis individually
 
         # TODO recommend_velocity to reach desired setpoint at a given velocity
         phi_vel = self.motor_phi.recommend_velocity(dest[0])
         th_vel  = self.motor_th .recommend_velocity(dest[1])
+
+        # TODO this is lame
+        scale = error * 4
+        phi_vel = scale * phi_vel
+        th_vel  = scale * th_vel
 
         return phi_vel, th_vel
 

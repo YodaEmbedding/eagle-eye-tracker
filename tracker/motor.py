@@ -51,6 +51,10 @@ class Motor:
         """Recommends a velocity given desired position"""
         return (np.sign(self.recommend_accel(setpoint, nearest_angle)) *
             self.velocity_max)
+        # error = abs(self.velocity - setpoint)
+        # direction = np.sign(self.recommend_accel(setpoint, nearest_angle))
+        # prop = error * 4
+        # return direction * self.velocity_max * prop
 
     def set_velocity_setpoint(self, velocity_setpoint):
         self.motor.set_velocity_setpoint(self.direction * velocity_setpoint)
