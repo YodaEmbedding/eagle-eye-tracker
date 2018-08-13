@@ -1,5 +1,6 @@
 import numpy as np
 from numpy_ringbuffer import RingBuffer
+import quaternion
 
 from .coordinategenerator import CoordinateGenerator, LatentCoordinateGenerator
 from .drawutils import draw_sphere, set_axes_radius
@@ -62,12 +63,23 @@ class WorldState:
         ax.set_title('Error', position=(0.5, 0.9))
         ax.set_xlabel('x')
         ax.set_ylabel('y')
-        ax.set_ylim([0, 1.42])
+        ax.set_ylim([0.00, 1.00])
 
     def update(self, dt):
         self.coord_gen.update(dt, self.motion_controller.curr_rot)  # TODO this updates using a curr_rot that doesn't account for new position of motors... oh well
         self.motion_controller.update(dt)
-        error   = np.linalg.norm(self.coord_gen.coord)
-        error_l = np.linalg.norm(self.latent_coord_gen.coord)
+
+        error   = self._calc_error(self.coord_gen.dest_quat)
+        error_l = self._calc_error(self.latent_coord_gen.dest_quat)
         self.error_history.append(error)
         self.error_history_latent.append(error_l)
+
+        # c   = tuple(float(f"{x:.2f}") for x in self.coord_gen.coord)
+        # c_l = tuple(float(f"{x:.2f}") for x in self.latent_coord_gen.coord)
+        # print(f"{c}; {c_l}")
+        # print(error, error_l)
+
+    def _calc_error(self, q):
+        return quaternion.rotation_intrinsic_distance(
+            self.motion_controller.curr_quat, q)
+
