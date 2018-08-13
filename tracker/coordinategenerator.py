@@ -70,7 +70,7 @@ class LatentCoordinateGenerator(CoordinateGenerator):
         super().__init__(lambda: self.parent.coord)
 
     def update(self, dt, rot, update_coord=True):
-        self.parent.update(dt, rot)
+        # self.parent.update(dt, rot)
         self.time_elapsed += dt
         self.time_since_update += dt
         update_coord = (self.time_since_update >= 1. / self.fps)

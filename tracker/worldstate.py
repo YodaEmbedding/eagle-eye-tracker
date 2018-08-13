@@ -21,7 +21,7 @@ class WorldState:
             bound_min=-0.5*np.pi, bound_max=0.0)
 
         self.motion_controller = MotionController(self.latent_coord_gen,
-            motor_phi, motor_th)
+            motor_phi, motor_th, latency_compensation=0.200)
 
         capacity = 512
         self.error_history = RingBuffer(capacity=capacity, dtype=np.float32)
@@ -65,6 +65,7 @@ class WorldState:
         ax.set_ylim([0, 1.42])
 
     def update(self, dt):
+        self.coord_gen.update(dt, self.motion_controller.curr_rot)  # TODO this updates using a curr_rot that doesn't account for new position of motors... oh well
         self.motion_controller.update(dt)
         error   = np.linalg.norm(self.coord_gen.coord)
         error_l = np.linalg.norm(self.latent_coord_gen.coord)

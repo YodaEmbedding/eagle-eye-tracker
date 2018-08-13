@@ -1,6 +1,7 @@
 import numpy as np
 
 from .coordinatemath import shortest_rad
+from .history import History
 
 class Motor:
     """Provides interface with virtual or physical motor and other useful functionality"""
@@ -10,6 +11,8 @@ class Motor:
         self.bound_min = bound_min
         self.bound_max = bound_max
         self.direction = direction
+
+        self.position_history = History(5.0)
 
     @property
     def position(self):
@@ -58,6 +61,7 @@ class Motor:
 
     def update(self, dt):
         self.motor.update(dt)
+        self.position_history.append(self.position, dt)
 
     def _constrain_bounds(self, setpoint):
         return np.clip(setpoint, self.bound_min, self.bound_max)

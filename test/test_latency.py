@@ -46,4 +46,3 @@ def test_latency():
             assert latent.obj == i
             time.sleep(0.02)
         time.sleep(0.01)
-
