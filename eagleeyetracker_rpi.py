@@ -46,11 +46,12 @@ if __name__ == '__main__':
         (comm_comm.latest_coord_x_s.value, comm_comm.latest_coord_y_s.value))
 
     stepper_comms = [StepperComm(s.accel_max_rad, s.velocity_max_rad) for s in steppers]
-    motor_phi = Motor(stepper_comms[0], direction=1,  bound_min=-0.3*math.pi, bound_max=0.3*math.pi)
-    motor_th  = Motor(stepper_comms[1], direction=-1, bound_min=-0.3*math.pi, bound_max=0.0)
+    motor_phi = Motor(stepper_comms[0], direction=1,  bound_min=-0.4*math.pi, bound_max=0.4*math.pi)
+    motor_th  = Motor(stepper_comms[1], direction=-1, bound_min=-0.4*math.pi, bound_max=20./180*math.pi)
 
     motion_controller = MotionController(coordinate_generator,
-        motor_phi, motor_th, latency_compensation=0.050)
+        motor_phi, motor_th, latency_compensation=0.15)
+        #motor_phi, motor_th, latency_compensation=0.60)  # DSLR
 
     processes = (
         [Process(target=run_motor_func(s), args=sc.get_args())
