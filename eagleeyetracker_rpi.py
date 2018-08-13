@@ -50,7 +50,7 @@ if __name__ == '__main__':
     motor_th  = Motor(stepper_comms[1], direction=-1, bound_min=-0.3*math.pi, bound_max=0.0)
 
     motion_controller = MotionController(coordinate_generator,
-        motor_phi, motor_th)
+        motor_phi, motor_th, latency_compensation=0.050)
 
     processes = (
         [Process(target=run_motor_func(s), args=sc.get_args())
