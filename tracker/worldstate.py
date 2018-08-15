@@ -55,6 +55,7 @@ class WorldState:
         y_l = np.array(self.error_history_latent)
 
         ax.clear()
+        ax.axhline(y=np.pi * 5 / 90, linewidth=2, color='#77bb33')
         ax.plot(x,   y,   color="#ff55bb")
         ax.plot(x_l, y_l, color="#772255")
         ax.axis('off')
@@ -62,7 +63,10 @@ class WorldState:
         ax.set_title('Error', position=(0.5, 0.9))
         ax.set_xlabel('x')
         ax.set_ylabel('y')
-        ax.set_ylim([0.00, 1.00])
+
+        # error=3.141 corresponds to 90 degrees
+        # so set limits to 1.047 <=> 30 degrees
+        ax.set_ylim([0.00, 1.047])
 
     def update(self, dt):
         self.coord_gen.update(dt, self.motion_controller.curr_rot)  # TODO this updates using a curr_rot that doesn't account for new position of motors... oh well

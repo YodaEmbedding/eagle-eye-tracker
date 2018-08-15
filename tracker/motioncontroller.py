@@ -91,7 +91,7 @@ class MotionController:
         phi_vel = self.motor_phi.recommend_velocity(dest[0])
         th_vel  = self.motor_th .recommend_velocity(dest[1])
 
-        if error < 0.1:
+        if error < 0.05:
             return 0.0, 0.0
 
         # TODO this is lame
@@ -99,7 +99,7 @@ class MotionController:
         #phi_vel = scale * phi_vel
         #th_vel  = scale * th_vel
 
-        return phi_vel, 0.25 * th_vel
+        return phi_vel, th_vel
 
         # TODO PID (control algo)... or should it be handled closer to motors?
         # TODO Path planning
